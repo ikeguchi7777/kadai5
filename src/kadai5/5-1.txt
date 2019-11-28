@@ -1,0 +1,80 @@
+*** GOALS ***[A on B, B on C]
+**A on B
+Place A on B
+*** GOALS ***[clear B, holding A]
+**clear B
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[holding A]
+**holding A
+remove A from on top ?y2
+*** GOALS ***[A on ?y2, clear A, handEmpty]
+**A on ?y2
+Place A on ?y6
+*** GOALS ***[clear ?y6, holding A]
+**clear ?y6
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[holding A]
+**holding A
+pick up A from the table
+*** GOALS ***[ontable A, clear A, handEmpty]
+**ontable A
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[clear A, handEmpty]
+**clear A
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+pick up A from the table
+Place A on ?y6
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear A, handEmpty]
+*** GOALS ***[clear A, handEmpty]
+**clear A
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear A, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove A from on top ?y2
+Place A on B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[B on C]
+**B on C
+Place B on C
+*** GOALS ***[clear C, holding B]
+**clear C
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+pick up B from the table
+*** GOALS ***[ontable B, clear B, handEmpty]
+**ontable B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+remove ?x12 from on top B
+*** GOALS ***[?x12 on B, clear ?x12, handEmpty]
+**?x12 on B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear ?x12, handEmpty]
+**clear ?x12
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove ?x12 from on top B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y2, A on B, clear A, clear B, holding ?x12]
+*** GOALS ***[handEmpty]
+**handEmpty
+put ?x14 down on the table
+*** GOALS ***[holding ?x14]
+**holding ?x14
+put ?x14 down on the table
+pick up B from the table
+Place B on C
+***** This is a plan! *****
+pick up A from the table
+Place A on A
+remove A from on top A
+Place A on B
+remove A from on top B
+put A down on the table
+pick up B from the table
+Place B on C
+{?y6=A, ?x14=A, ?x12=A, ?y2=A, ?x11=B, ?y0=B, ?x10=B, ?x8=A, ?x6=A, ?y12=B, ?y10=C, ?x2=A, ?x0=A}
