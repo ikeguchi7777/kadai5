@@ -184,8 +184,8 @@ public class Planner {
 
 	private Vector<String> initGoalList() {
 		Vector<String> goalList = new Vector<String>();
-		goalList.addElement("B on C");
 		goalList.addElement("A on B");
+		goalList.addElement("B on C");
 		return goalList;
 	}
 
