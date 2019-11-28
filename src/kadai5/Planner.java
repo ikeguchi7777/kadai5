@@ -32,6 +32,10 @@ public class Planner {
 			Operator op = plan.elementAt(i);
 			System.out.println((op.instantiate(theBinding)).name);
 		}
+		
+		System.out.println("state: " + initialState);
+		System.out.println("plan: " + plan);
+		System.out.println("binding: " + theBinding);
 	}
 
 	private boolean planning(Vector<String> theGoalList,
