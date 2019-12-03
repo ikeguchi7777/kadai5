@@ -121,6 +121,9 @@ public class Planner {
 		Operator op = operators.elementAt(randInt);
 		operators.removeElementAt(randInt);
 		operators.addElement(op);*/
+		Operator op = operators.elementAt(0);
+		operators.removeElementAt(0);
+		operators.addElement(op);
 
 		for (int i = cPoint; i < operators.size(); i++) {
 			Operator anOperator = rename(operators.elementAt(i));
@@ -297,10 +300,6 @@ public class Planner {
 				return((Integer)(r1.getPriority())).compareTo(r2.getPriority());
 			}
 		});
-		System.out.println(operators.toString());
+		//System.out.println(operators.toString());
 	}
-
-//	void sort(Vector<Operator> operator){
-
-//	}
 }
