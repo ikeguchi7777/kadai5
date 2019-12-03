@@ -23,7 +23,7 @@ public class Shape {
 class Triangle extends Shape {
 	public static Vector<String> make(String name) {
 		Vector<String> result = Shape.make(name);
-
+		result.add(name + " has a characteristic of triangle");
 		return result;
 	}
 }

@@ -9,13 +9,15 @@ public class Operator {
 	Vector<String> ifList;
 	Vector<String> addList;
 	Vector<String> deleteList;
+	int priority;
 
 	Operator(String theName,
-			Vector<String> theIfList, Vector<String> theAddList, Vector<String> theDeleteList) {
+			Vector<String> theIfList, Vector<String> theAddList, Vector<String> theDeleteList,int thePriority) {
 		name = theName;
 		ifList = theIfList;
 		addList = theAddList;
 		deleteList = theDeleteList;
+		priority = thePriority;
 	}
 
 	public Vector<String> getAddList() {
@@ -30,11 +32,16 @@ public class Operator {
 		return ifList;
 	}
 
+	public int getPriority(){
+		return priority;
+	}
+
 	public String toString() {
 		String result = "NAME: " + name + "\n" +
 				"IF :" + ifList + "\n" +
 				"ADD:" + addList + "\n" +
-				"DELETE:" + deleteList;
+				"DELETE:" + deleteList + "\n" +
+				"PRIORITY:" + priority;
 		return result;
 	}
 
@@ -90,8 +97,10 @@ public class Operator {
 		}
 		// 新しいnameを作る
 		String newName = renameVars(name, renamedVarsTable);
+		//新しいpriorityを作る
+		//int newPriority = Integer.valueOf(renameVars(String.valueOf(priority), renamedVarsTable));
 
-		return new Operator(newName, newIfList, newAddList, newDeleteList);
+		return new Operator(newName, newIfList, newAddList, newDeleteList, priority);
 	}
 
 	private Vector<String> getVars(String thePattern, Vector<String> vars) {
@@ -151,7 +160,7 @@ public class Operator {
 			String newDelete = instantiateString(deleteList.elementAt(i), theBinding);
 			newDeleteList.addElement(newDelete);
 		}
-		return new Operator(newName, newIfList, newAddList, newDeleteList);
+		return new Operator(newName, newIfList, newAddList, newDeleteList, priority);
 	}
 
 	private String instantiateString(String thePattern, Hashtable<String,String> theBinding) {
