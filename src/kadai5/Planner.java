@@ -72,7 +72,11 @@ public class Planner {
 						//System.out.println("Success !");
 						return true;
 					} else {
-						cPoint = tmpPoint;
+						if (tmpPoint == 0)
+							cPoint++;
+						else
+							cPoint = tmpPoint + 1;
+						//cPoint=tmpPoint;
 						//System.out.println("Fail::"+cPoint);
 						theGoalList.insertElementAt(aGoal, 0);
 
@@ -86,6 +90,8 @@ public class Planner {
 						for (int i = 0; i < orgState.size(); i++) {
 							theCurrentState.addElement(orgState.elementAt(i));
 						}
+						if(tmpPoint==0)
+							return false;
 					}
 				} else {
 					theBinding.clear();
@@ -202,9 +208,9 @@ public class Planner {
 		//initialState.addElement("clear A");
 		//initialState.addElement("clear B");
 		//initialState.addElement("clear C");
-		initialState.addAll(Shape.make("A","red"));
-		initialState.addAll(Shape.make("B","blue"));
-		initialState.addAll(Shape.make("C","green"));
+		initialState.addAll(Shape.make("A", "red"));
+		initialState.addAll(Shape.make("B", "blue"));
+		initialState.addAll(Shape.make("C", "green"));
 
 		//initialState.addElement("ontable A");
 		//initialState.addElement("ontable B");
@@ -341,8 +347,8 @@ public class Planner {
 		deleteList6.addElement("?z on ?x");
 		/// PRIORITY
 		int priority6 = 10;
-		operators.addElement(new Operator(name6, ifList6, addList6, deleteList6,priority6));
-		
+		operators.addElement(new Operator(name6, ifList6, addList6, deleteList6, priority6));
+
 		operators.sort(new Comparator<Operator>() {
 
 			@Override
@@ -350,7 +356,7 @@ public class Planner {
 				// TODO 自動生成されたメソッド・スタブ
 				return ((Integer) (o1.getPriority())).compareTo(o2.getPriority());
 			}
-			
+
 		});
 
 		//Collections.sort(operators, new Comparator() {
