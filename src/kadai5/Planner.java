@@ -17,7 +17,22 @@ public class Planner {
 	Planner() {
 		rand = new Random();
 	}
-
+	private Vector<String> testPlan(Vector<Operator> thePlan, Hashtable<String, String> theBinding) {
+		Vector<String> theState = initInitialState();
+		Vector<Operator> newPlan = new Vector<>();
+		for (Operator operator : thePlan) {
+			Operator instOp = operator.instantiate(theBinding);
+			if (theState.containsAll(instOp.ifList)) {
+				newPlan.add(operator);
+				instOp.applyState(theState);
+			} else {
+				break;
+			}
+		}
+		thePlan = newPlan;
+		return theState;
+	}
+	
 	public void start() {
 		initOperators();
 		Vector<String> goalList = initGoalList();
@@ -25,7 +40,13 @@ public class Planner {
 
 		Hashtable<String, String> theBinding = new Hashtable<String, String>();
 		plan = new Vector<Operator>();
-		planning(goalList, initialState, theBinding);
+
+		do {
+			planning(goalList, initialState, theBinding);
+			goalList = initGoalList();
+			initialState = testPlan(plan, theBinding);
+		} while (!initialState.containsAll(goalList));
+
 
 		System.out.println("***** This is a plan! *****");
 		for (int i = 0; i < plan.size(); i++) {
@@ -77,7 +98,7 @@ public class Planner {
 					} else {
 						cPoint = tmpPoint;
 						//System.out.println("Fail::"+cPoint);
-						theGoalList.insertElementAt(aGoal, 0);
+						theGoalList.add(aGoal);
 
 						theBinding.clear();
 						for (Enumeration<String> e = orgBinding.keys(); e.hasMoreElements();) {
@@ -120,9 +141,13 @@ public class Planner {
 		}
 
 		int randInt = Math.abs(rand.nextInt()) % operators.size();
+		//for (Operator operator : operators)
+		//	System.out.println(operator.name);
+		//System.out.print(">");
+		//int randInt = new Scanner(System.in).nextInt();
 		Operator op = operators.elementAt(randInt);
 		operators.removeElementAt(randInt);
-		operators.addElement(op);
+		operators.insertElementAt(op, 0);
 
 		for (int i = cPoint; i < operators.size(); i++) {
 			Operator anOperator = rename(operators.elementAt(i));
