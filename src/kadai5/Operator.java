@@ -21,15 +21,15 @@ public class Operator {
 	}
 
 	public Vector<String> getAddList() {
-		return addList;
+		return new Vector<>(addList);
 	}
 
 	public Vector<String> getDeleteList() {
-		return deleteList;
+		return new Vector<>(deleteList);
 	}
 
 	public Vector<String> getIfList() {
-		return ifList;
+		return new Vector<>(ifList);
 	}
 
 	public int getPriority(){
