@@ -18,6 +18,7 @@ public class Planner {
 	Planner() {
 		rand = new Random();
 	}
+
 	private Vector<String> testPlan(Vector<Operator> thePlan, Hashtable<String, String> theBinding) {
 		Vector<String> theState = initInitialState();
 		Vector<Operator> newPlan = new Vector<>();
@@ -33,7 +34,7 @@ public class Planner {
 		thePlan = newPlan;
 		return theState;
 	}
-	
+
 	public void start() {
 		initOperators();
 		Vector<String> goalList = initGoalList();
@@ -48,13 +49,12 @@ public class Planner {
 			initialState = testPlan(plan, theBinding);
 		} while (!initialState.containsAll(goalList));
 
-
 		System.out.println("***** This is a plan! *****");
 		for (int i = 0; i < plan.size(); i++) {
 			Operator op = plan.elementAt(i);
 			System.out.println((op.instantiate(theBinding)).name);
 		}
-		
+
 		System.out.println("state: " + initialState);
 		System.out.println("plan: " + plan);
 		System.out.println("binding: " + theBinding);
@@ -115,7 +115,7 @@ public class Planner {
 						for (int i = 0; i < orgState.size(); i++) {
 							theCurrentState.addElement(orgState.elementAt(i));
 						}
-						if(tmpPoint==0)
+						if (tmpPoint == 0)
 							return false;
 					}
 				} else {
@@ -156,6 +156,7 @@ public class Planner {
 		//Operator op = operators.elementAt(0);
 		//operators.removeElementAt(0);
 		//operators.addElement(op);
+		sortOp();
 
 		for (int i = cPoint; i < operators.size(); i++) {
 			Operator anOperator = rename(operators.elementAt(i));
@@ -183,10 +184,13 @@ public class Planner {
 					Operator newOperator = anOperator.instantiate(theBinding);
 					Vector<String> newGoals = newOperator.getIfList();
 					System.out.println(newOperator.name);
+					//operators.get(i).setPriority(anOperator.getPriority() + 1);
 					if (planning(newGoals, theCurrentState, theBinding)) {
+						newOperator = newOperator.instantiate(theBinding);
 						System.out.println(newOperator.name);
 						plan.addElement(newOperator);
 						theCurrentState = newOperator.applyState(theCurrentState);
+						//operators.get(i).setPriority(anOperator.getPriority() + 1);
 						return i + 1;
 					} else {
 						// 失敗したら元に戻す．
@@ -207,7 +211,9 @@ public class Planner {
 					}
 				}
 			}
+			System.out.println("次のOPへ:" + theGoal);
 		}
+		System.out.println("失敗:" + theGoal);
 		return -1;
 	}
 
@@ -223,8 +229,9 @@ public class Planner {
 		Vector<String> goalList = new Vector<String>();
 		//goalList.addElement("B on C");
 		//goalList.addElement("A on B");
-		goalList.addElement("red on blue");
-		goalList.addElement("blue on green");
+		goalList.addElement("red on B");
+		goalList.addElement("B on green");
+
 		return goalList;
 	}
 
@@ -290,7 +297,7 @@ public class Planner {
 		deleteList2.addElement(new String("clear ?x"));
 		deleteList2.addElement(new String("handEmpty"));
 		// PRIORITY
-		int priority2 = 1;
+		int priority2 = 4;
 		Operator operator2 = new Operator(name2, ifList2, addList2, deleteList2, priority2);
 		operators.addElement(operator2);
 
@@ -299,7 +306,7 @@ public class Planner {
 		String name3 = new String("pick up ?x from the table");
 		/// IF
 		Vector<String> ifList3 = new Vector<String>();
-		ifList3.addElement("?x is name");
+		//ifList3.addElement("?x is name");
 		ifList3.addElement(new String("ontable ?x"));
 		ifList3.addElement(new String("clear ?x"));
 		ifList3.addElement(new String("handEmpty"));
@@ -312,7 +319,7 @@ public class Planner {
 		deleteList3.addElement(new String("clear ?x"));
 		deleteList3.addElement(new String("handEmpty"));
 		// PRIORITY
-		int priority3 = 4;
+		int priority3 = 1;
 		Operator operator3 = new Operator(name3, ifList3, addList3, deleteList3, priority3);
 		operators.addElement(operator3);
 
@@ -321,7 +328,7 @@ public class Planner {
 		String name4 = new String("put ?x down on the table");
 		/// IF
 		Vector<String> ifList4 = new Vector<String>();
-		ifList4.addElement("?x is name");
+		//ifList4.addElement("?x is name");
 		ifList4.addElement(new String("holding ?x"));
 		/// ADD-LIST
 		Vector<String> addList4 = new Vector<String>();
@@ -332,7 +339,7 @@ public class Planner {
 		Vector<String> deleteList4 = new Vector<String>();
 		deleteList4.addElement(new String("holding ?x"));
 		// PRIORITY
-		int priority4 = 2;
+		int priority4 = 11;
 		Operator operator4 = new Operator(name4, ifList4, addList4, deleteList4, priority4);
 		operators.addElement(operator4);
 
@@ -352,10 +359,10 @@ public class Planner {
 		Vector<String> deleteList5 = new Vector<>();
 		deleteList5.addElement("?x on ?z");
 		/// PRIORITY
-		int priority5 = 10;
+		int priority5 = 5;
 		operators.addElement(new Operator(name5, ifList5, addList5, deleteList5, priority5));
 
-		// OPERATOR 5
+		// OPERATOR 6
 		/// NAME:?yの名前は?x
 		String name6 = "?x is name of ?y";
 		/// IF
@@ -371,18 +378,48 @@ public class Planner {
 		Vector<String> deleteList6 = new Vector<>();
 		deleteList6.addElement("?z on ?x");
 		/// PRIORITY
-		int priority6 = 10;
+		int priority6 = 5;
 		operators.addElement(new Operator(name6, ifList6, addList6, deleteList6, priority6));
 
-		operators.sort(new Comparator<Operator>() {
+		// OPERATOR 7
+		/// NAME:?yの特徴は?x
+		String name7 = "?x is a characteristic of ?y";
+		/// IF
+		Vector<String> ifList7 = new Vector<>();
+		ifList7.addElement("?y has a characteristic of ?x");
+		ifList7.addElement("?y is name");
+		//ifList7.addElement("?x has a characteristic of ?y");
+		ifList7.addElement("?z on ?y");
+		/// ADD-LIST
+		Vector<String> addList7 = new Vector<>();
+		addList7.addElement("?z on ?x");
+		/// DELETE-LIST
+		Vector<String> deleteList7 = new Vector<>();
+		deleteList7.addElement("?z on ?y");
+		/// PRIORITY
+		int priority7 = 10;
+		operators.addElement(new Operator(name7, ifList7, addList7, deleteList7, priority7));
 
-			@Override
-			public int compare(Operator o1, Operator o2) {
-				// TODO 自動生成されたメソッド・スタブ
-				return ((Integer) (o1.getPriority())).compareTo(o2.getPriority());
-			}
+		// OPERATOR 8
+		/// NAME:?yの特徴は?x
+		String name8 = "?x is a characteristic of ?y";
+		/// IF
+		Vector<String> ifList8 = new Vector<>();
+		ifList8.addElement("?y has a characteristic of ?x");
+		ifList8.addElement("?y is name");
+		//ifList7.addElement("?x has a characteristic of ?y");
+		ifList8.addElement("?y on ?z");
+		/// ADD-LIST
+		Vector<String> addList8 = new Vector<>();
+		addList8.addElement("?x on ?z");
+		/// DELETE-LIST
+		Vector<String> deleteList8 = new Vector<>();
+		deleteList8.addElement("?y on ?z");
+		/// PRIORITY
+		int priority8 = 10;
+		operators.addElement(new Operator(name8, ifList8, addList8, deleteList8, priority8));
 
-		});
+		sortOp();
 
 		//Collections.sort(operators, new Comparator() {
 		//	public int compare(Object o1, Object o2) {
@@ -392,5 +429,18 @@ public class Planner {
 		//	}
 		//});
 		//System.out.println(operators.toString());
+	}
+
+	void sortOp() {
+		operators.sort(new Comparator<Operator>() {
+
+			@Override
+			public int compare(Operator o1, Operator o2) {
+				// TODO 自動生成されたメソッド・スタブ
+				return ((Integer) (o1.getPriority())).compareTo(o2.getPriority());
+			}
+
+		});
+		//System.out.println(operators);
 	}
 }

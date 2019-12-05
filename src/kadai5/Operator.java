@@ -36,6 +36,10 @@ public class Operator {
 		return priority;
 	}
 
+	public void setPriority(int p) {
+		priority=p;
+	}
+
 	public String toString() {
 		String result = "NAME: " + name + "\n" +
 				"IF :" + ifList + "\n" +
