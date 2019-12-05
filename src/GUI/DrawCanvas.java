@@ -4,7 +4,6 @@ import javax.swing.JPanel;
 
 import java.awt.Graphics;
 import java.util.Scanner;
-import java.awt.Color;
 
 /**
  * DrawCanvas
@@ -93,7 +92,7 @@ public class DrawCanvas extends JPanel {
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
                 if (board[row][col] != null) {
-                    g.setColor(Color.getColor(board[row][col].getColor()));
+                    g.setColor(board[row][col].getColor());
                     putShape(board[row][col], row, col, g);
                 }
             }

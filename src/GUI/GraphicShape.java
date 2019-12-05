@@ -1,5 +1,10 @@
 package GUI;
 
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Vector;
+import java.awt.Color;
+
 /**
  * GraphicShape
  */
@@ -9,7 +14,28 @@ public class GraphicShape {
     String color;
     String shape;
     String on;
+    public static HashMap<String,Color> colorMap = new HashMap<>();
+    public static HashMap<String,String> nameMap = new HashMap<>();
 
+    static{
+        colorMap.put("black",Color.BLACK);
+        colorMap.put("blue",Color.BLUE);
+        colorMap.put("cyan",Color.CYAN);
+        colorMap.put("darkgray",Color.DARK_GRAY);
+        colorMap.put("gray",Color.GRAY);
+        colorMap.put("green",Color.GREEN);
+        colorMap.put("lightgray",Color.LIGHT_GRAY);
+        colorMap.put("magenta",Color.MAGENTA);
+        colorMap.put("orange",Color.ORANGE);
+        colorMap.put("pink",Color.PINK);
+        colorMap.put("red",Color.RED);
+        colorMap.put("white",Color.WHITE);
+        colorMap.put("yellow",Color.YELLOW);
+
+        nameMap.put("No.1","A");
+        nameMap.put("No.2","B");
+        nameMap.put("No.3","C");
+    }
     public GraphicShape(String name, String color, String shape, String on) {
         this.name = name;
         this.color = color;
@@ -21,15 +47,22 @@ public class GraphicShape {
         return on;
     }
 
-    public void setOn(String on) {
-        this.on = on;
+    public Color getColor(){
+        return colorMap.get(color);
     }
 
-    public String getColor() {
-        return color;
+    public String getShape() {
+        return shape;
     }
 
-    public void setColor(String color) {
-        this.color = color;
+    public String getName() {
+        return name;
+    }
+
+    public GraphicShape[] parseState(Vector<String> theCurrentState) {
+        return null;
+    }
+
+    public void parseBinding(Hashtable<String, String> theBinding){
     }
 }
