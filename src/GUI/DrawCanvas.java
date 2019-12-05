@@ -14,7 +14,7 @@ public class DrawCanvas extends JPanel {
     static final int rectSize = 50;
     static Scanner stdin = new Scanner(System.in);
 
-    private GraphicShape holding;
+    //private GraphicShape holding;
     // 一番上はholding用 board[row][col]
     private GraphicShape[][] board;
     private final int boxNum = 3;
@@ -33,16 +33,19 @@ public class DrawCanvas extends JPanel {
 
     public void pickUp() {
         int col = selectHold();
-        holding = board[holdTop(col)][col];
+        //holding = board[holdTop(col)][col];
+        board[boxNum][col] = board[holdTop(col)][col];
         board[holdTop(col)][col] = null;
         repaint();
-        dropDown();
+        dropDown(col);
     }
 
-    private void dropDown() {
+    private void dropDown(int preCol) {
         int col = selectDrop();
-        board[holdTop(col) + 1][col] = holding;
-        holding = null;
+        //board[holdTop(col) + 1][col] = holding;
+        board[holdTop(col) + 1][col] = board[boxNum][preCol];
+        board[boxNum][preCol] = null;
+        //holding = null;
         repaint();
         pickUp();
     }
