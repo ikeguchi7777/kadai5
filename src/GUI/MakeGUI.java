@@ -17,7 +17,7 @@ public class MakeGUI {
     }
 
     public static void MakePlannerGUI() {
-        FrameBase frame = new FrameBase("Planner", 800, 800);
+        FrameBase frame = new FrameBase("Planner", DrawCanvas.CanvasX, DrawCanvas.CanvasY);
 
         // top of Control Button
         ActionListener listener = new ActionListener() {

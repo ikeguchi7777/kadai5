@@ -32,9 +32,10 @@ public class GraphicShape {
         colorMap.put("white",Color.WHITE);
         colorMap.put("yellow",Color.YELLOW);
 
-        nameMap.put("No.1","A");
-        nameMap.put("No.2","B");
-        nameMap.put("No.3","C");
+        nameMap.put("No.0","A");
+        nameMap.put("No.1","B");
+        nameMap.put("No.2","C");
+        nameMap.put("No.3","D");
     }
     public GraphicShape(String name, String color, String shape, String on) {
         this.name = name;
@@ -56,7 +57,7 @@ public class GraphicShape {
     }
 
     public String getName() {
-        return name;
+        return nameMap.get(name);
     }
 
     public GraphicShape[] parseState(Vector<String> theCurrentState) {

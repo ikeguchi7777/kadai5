@@ -2,6 +2,7 @@ package GUI;
 
 import javax.swing.JPanel;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Scanner;
 
@@ -10,13 +11,18 @@ import java.util.Scanner;
  */
 public class DrawCanvas extends JPanel {
 
-    static final int rectSize = 50;
+    static final int rectSize = 120;
+    static final int margin = 30;
+    static final int holdMargin = 5;
     static Scanner stdin = new Scanner(System.in);
 
-    //private GraphicShape holding;
+    private int holding;
     // 一番上はholding用 board[row][col]
     private GraphicShape[][] board;
-    private final int boxNum = 3;
+    private static final int boxNum = 3;
+
+    static final int CanvasX = margin + boxNum * (rectSize+margin)+margin;
+    static final int CanvasY = 100 + (boxNum+1) * (rectSize+margin)+margin;
 
     public void init() {
         board = new GraphicShape[boxNum + 1][boxNum];
@@ -32,7 +38,7 @@ public class DrawCanvas extends JPanel {
 
     public void pickUp() {
         int col = selectHold();
-        //holding = board[holdTop(col)][col];
+        holding = col;
         board[boxNum][col] = board[holdTop(col)][col];
         board[holdTop(col)][col] = null;
         repaint();
@@ -41,10 +47,9 @@ public class DrawCanvas extends JPanel {
 
     private void dropDown(int preCol) {
         int col = selectDrop();
-        //board[holdTop(col) + 1][col] = holding;
         board[holdTop(col) + 1][col] = board[boxNum][preCol];
         board[boxNum][preCol] = null;
-        //holding = null;
+        holding = col;
         repaint();
         pickUp();
     }
@@ -91,15 +96,25 @@ public class DrawCanvas extends JPanel {
         super.paintComponent(g);
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
+                int startX = margin + col * (rectSize+margin);
+                int startY = margin + (boxNum - row) * (rectSize+margin);
                 if (board[row][col] != null) {
                     g.setColor(board[row][col].getColor());
-                    putShape(board[row][col], row, col, g);
+                    putShape(board[row][col], startX, startY, g);
+                }
+                if (row == board.length - 1 && holding == col) {
+                    g.setColor(Color.BLACK);
+                    int pointX[] = {startX - holdMargin,startX + rectSize + holdMargin};
+                    int pointY[] = {startY - holdMargin,startY - holdMargin};
+                    g.drawPolyline(pointX,pointY,pointX.length);
                 }
             }
         }
     }
 
-    private void putShape(GraphicShape gs, int i, int j, Graphics g) {
-        g.fillRect(100 + j * 250, 100 + (boxNum-i) * 150, rectSize, rectSize);
+    private void putShape(GraphicShape gs, int x, int y, Graphics g) {
+        g.fillRect(x, y, rectSize, rectSize);
+        g.setColor(Color.black);
+        g.drawString(gs.getName(), x+rectSize, y+rectSize);
     }
 }
