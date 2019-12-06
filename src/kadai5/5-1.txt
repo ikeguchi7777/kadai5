@@ -1,0 +1,234 @@
+*** GOALS ***[A on B, B on C]
+**A on B
+Place A on B
+*** GOALS ***[clear B, holding A]
+**clear B
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[holding A]
+**holding A
+remove A from on top ?y2
+*** GOALS ***[A on ?y2, clear A, handEmpty]
+**A on ?y2
+Place A on ?y3
+*** GOALS ***[clear ?y3, holding A]
+**clear ?y3
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[holding A]
+**holding A
+remove A from on top ?y5
+*** GOALS ***[A on ?y5, clear A, handEmpty]
+**A on ?y5
+Place A on ?y6
+*** GOALS ***[clear ?y6, holding A]
+**clear ?y6
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[holding A]
+**holding A
+pick up A from the table
+*** GOALS ***[ontable A, clear A, handEmpty]
+**ontable A
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[clear A, handEmpty]
+**clear A
+[clear A, clear B, clear C, ontable A, ontable B, ontable C, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+pick up A from the table
+Place A on ?y6
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear A, handEmpty]
+*** GOALS ***[clear A, handEmpty]
+**clear A
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear A, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove A from on top ?y5
+Place A on ?y3
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear A, handEmpty]
+*** GOALS ***[clear A, handEmpty]
+**clear A
+[clear B, clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear A, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove A from on top ?y2
+Place A on B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[B on C]
+**B on C
+Place B on C
+*** GOALS ***[clear C, holding B]
+**clear C
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+remove B from on top ?y13
+*** GOALS ***[B on ?y13, clear B, handEmpty]
+**B on ?y13
+Place B on ?y14
+*** GOALS ***[clear ?y14, holding B]
+**clear ?y14
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+pick up B from the table
+*** GOALS ***[ontable B, clear B, handEmpty]
+**ontable B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+Place B on ?y18
+*** GOALS ***[clear ?y18, holding B]
+**clear ?y18
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+pick up B from the table
+*** GOALS ***[ontable B, clear B, handEmpty]
+**ontable B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+Place B on ?y21
+*** GOALS ***[clear ?y21, holding B]
+**clear ?y21
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+remove B from on top ?y24
+*** GOALS ***[B on ?y24, clear B, handEmpty]
+**B on ?y24
+Place B on ?y25
+*** GOALS ***[clear ?y25, holding B]
+**clear ?y25
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[holding B]
+**holding B
+pick up B from the table
+*** GOALS ***[ontable B, clear B, handEmpty]
+**ontable B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+remove ?x29 from on top B
+*** GOALS ***[?x29 on B, clear ?x29, handEmpty]
+**?x29 on B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[clear ?x29, handEmpty]
+**clear ?x29
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove ?x29 from on top B
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, clear B, holding ?x29]
+*** GOALS ***[handEmpty]
+**handEmpty
+Place ?x32 on ?y32
+*** GOALS ***[clear ?y32, holding ?x32]
+**clear ?y32
+[clear C, ontable B, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, clear B, holding ?x29]
+*** GOALS ***[holding ?x32]
+**holding ?x32
+Place ?x32 on ?y32
+pick up B from the table
+Place B on ?y25
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear B, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear B, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove B from on top ?y24
+Place B on ?y21
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear ?y24, B on ?y21, clear B, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+pick up B from the table
+Place B on ?y18
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear ?y24, B on ?y21, B on ?y18, clear B, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+pick up B from the table
+Place B on ?y14
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear ?y24, B on ?y21, B on ?y18, B on ?y14, clear B, handEmpty]
+*** GOALS ***[clear B, handEmpty]
+**clear B
+[clear C, ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear ?y24, B on ?y21, B on ?y18, B on ?y14, clear B, handEmpty]
+*** GOALS ***[handEmpty]
+**handEmpty
+remove B from on top ?y13
+Place B on C
+***** This is a plan! *****
+pick up A from the table
+Place A on A
+remove A from on top A
+Place A on A
+remove A from on top A
+Place A on B
+remove A from on top B
+Place A on C
+pick up B from the table
+Place B on C
+remove B from on top C
+Place B on C
+pick up B from the table
+Place B on C
+pick up B from the table
+Place B on C
+remove B from on top C
+Place B on C
+state: [ontable C, A on ?y6, clear ?y5, A on ?y3, clear ?y2, A on B, clear A, holding ?x29, ?x32 on ?y32, clear ?x32, B on ?y25, clear ?y24, B on ?y21, B on ?y18, B on ?y14, clear ?y13, B on C, clear B, handEmpty]
+plan: [NAME: pick up A from the table
+IF :[handEmpty]
+ADD:[holding A]
+DELETE:[ontable A, clear A, handEmpty], NAME: Place A on ?y6
+IF :[holding A]
+ADD:[A on ?y6, clear A, handEmpty]
+DELETE:[clear ?y6, holding A], NAME: remove A from on top ?y5
+IF :[handEmpty]
+ADD:[clear ?y5, holding A]
+DELETE:[A on ?y5, clear A, handEmpty], NAME: Place A on ?y3
+IF :[holding A]
+ADD:[A on ?y3, clear A, handEmpty]
+DELETE:[clear ?y3, holding A], NAME: remove A from on top ?y2
+IF :[handEmpty]
+ADD:[clear ?y2, holding A]
+DELETE:[A on ?y2, clear A, handEmpty], NAME: Place A on B
+IF :[holding A]
+ADD:[A on B, clear A, handEmpty]
+DELETE:[clear B, holding A], NAME: remove ?x29 from on top B
+IF :[handEmpty]
+ADD:[clear B, holding ?x29]
+DELETE:[?x29 on B, clear ?x29, handEmpty], NAME: Place ?x32 on ?y32
+IF :[holding ?x32]
+ADD:[?x32 on ?y32, clear ?x32, handEmpty]
+DELETE:[clear ?y32, holding ?x32], NAME: pick up B from the table
+IF :[handEmpty]
+ADD:[holding B]
+DELETE:[ontable B, clear B, handEmpty], NAME: Place B on ?y25
+IF :[holding B]
+ADD:[B on ?y25, clear B, handEmpty]
+DELETE:[clear ?y25, holding B], NAME: remove B from on top ?y24
+IF :[handEmpty]
+ADD:[clear ?y24, holding B]
+DELETE:[B on ?y24, clear B, handEmpty], NAME: Place B on ?y21
+IF :[holding B]
+ADD:[B on ?y21, clear B, handEmpty]
+DELETE:[clear ?y21, holding B], NAME: pick up B from the table
+IF :[handEmpty]
+ADD:[holding B]
+DELETE:[ontable B, clear B, handEmpty], NAME: Place B on ?y18
+IF :[holding B]
+ADD:[B on ?y18, clear B, handEmpty]
+DELETE:[clear ?y18, holding B], NAME: pick up B from the table
+IF :[handEmpty]
+ADD:[holding B]
+DELETE:[ontable B, clear B, handEmpty], NAME: Place B on ?y14
+IF :[holding B]
+ADD:[B on ?y14, clear B, handEmpty]
+DELETE:[clear ?y14, holding B], NAME: remove B from on top ?y13
+IF :[handEmpty]
+ADD:[clear ?y13, holding B]
+DELETE:[B on ?y13, clear B, handEmpty], NAME: Place B on C
+IF :[holding B]
+ADD:[B on C, clear B, handEmpty]
+DELETE:[clear C, holding B]]
+binding: {?y0=B, ?x32=A, ?y29=B, ?y25=C, ?y24=C, ?x18=B, ?x17=B, ?y21=C, ?x14=B, ?x13=B, ?x10=B, ?x9=A, ?x6=A, ?x5=A, ?x29=A, ?x3=A, ?x27=B, ?y32=C, ?x2=A, ?x25=B, ?x0=A, ?x24=B, ?x21=B, ?x20=B, ?y18=C, ?y6=A, ?y14=C, ?y5=A, ?y13=C, ?y3=A, ?y10=C, ?y2=A}
