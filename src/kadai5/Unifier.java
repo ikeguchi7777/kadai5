@@ -11,7 +11,7 @@ public class Unifier {
 	String buffer2[];
 	Hashtable<String, String> vars;
 
-	Unifier() {
+	public Unifier() {
 		//vars = new Hashtable();
 	}
 

@@ -17,7 +17,7 @@ public class Planner {
 		(new Planner()).start();
 	}
 
-	Planner() {
+	public Planner() {
 		rand = new Random();
 	}
 
