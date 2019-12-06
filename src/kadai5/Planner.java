@@ -38,6 +38,7 @@ public class Planner {
 	}
 
 	public void start() {
+		blockNext.removeAllElements();
 		initOperators();
 		Vector<String> goalList = initGoalList();
 		Vector<String> initialState = initInitialState();
@@ -47,14 +48,17 @@ public class Planner {
 		plan = new Vector<Operator>();
 
 		//do {
-			do {
-				planning(goalList, initialState, theBinding, blockList);
-				goalList.removeAllElements();
-				for (String goal : GoalList) {
-					if (!initialState.contains(goal))
-						goalList.addElement(goal);
-				}
-			} while (!goalList.isEmpty());
+		do {
+			if (!planning(goalList, initialState, theBinding, blockList)) {
+				System.out.println("探索失敗");
+				return;
+			}
+			goalList.removeAllElements();
+			for (String goal : GoalList) {
+				if (!initialState.contains(goal))
+					goalList.addElement(goal);
+			}
+		} while (!goalList.isEmpty());
 
 		//	goalList = initGoalList();
 		//	initialState = testPlan(plan, theBinding);
@@ -71,12 +75,60 @@ public class Planner {
 		System.out.println("binding: " + theBinding);
 	}
 
+	/**
+	 * GUIで探索を行うためのメソッド
+	 * ゴールリストはすべて?x on ?yの形で
+	 * initialStateはShape.makeで作ったものを入れれば良い
+	 * 探索が失敗するとnullを返す
+	 * @param goalList
+	 * @param initialState
+	 * @return plan
+	 */
+	public Vector<Operator> GUIStart(Vector<String> goalList,Vector<String> initialState) {
+		blockNext.removeAllElements();
+		initOperators();
+		Vector<String> blockList = initBlockList(initialState);
+		GoalList = new Vector<>(goalList);
+		Hashtable<String, String> theBinding = new Hashtable<String, String>();
+		plan = new Vector<Operator>();
+
+		//do {
+		do {
+			if (!planning(goalList, initialState, theBinding, blockList)) {
+				System.out.println("探索失敗");
+				return null;
+			}
+			goalList.removeAllElements();
+			for (String goal : GoalList) {
+				if (!initialState.contains(goal))
+					goalList.addElement(goal);
+			}
+		} while (!goalList.isEmpty());
+
+		//	goalList = initGoalList();
+		//	initialState = testPlan(plan, theBinding);
+		//} while (!initialState.containsAll(goalList));
+
+		System.out.println("***** This is a plan! *****");
+		for (int i = 0; i < plan.size(); i++) {
+			Operator op = plan.elementAt(i);
+			System.out.println((op.instantiate(theBinding)).name);
+		}
+
+		System.out.println("state: " + initialState);
+		System.out.println("plan: " + plan);
+		System.out.println("binding: " + theBinding);
+
+		return plan;
+	}
+
 	private Vector<String> initBlockList(Vector<String> initState) {
 		Vector<String> result = new Vector<>();
 		for (String state : initState) {
 			if (state.startsWith("#"))
 				result.add(state.substring(1));
 		}
+		initState.removeIf(s -> s.startsWith("#"));
 		return result;
 	}
 
@@ -279,7 +331,7 @@ public class Planner {
 		Vector<String> goalList = new Vector<String>();
 		//goalList.addElement("B on C");
 		//goalList.addElement("A on B");
-		goalList.addElement("red on B");
+		goalList.addElement("triangle on B");
 		goalList.addElement("B on green");
 
 		return goalList;
@@ -290,7 +342,8 @@ public class Planner {
 		//initialState.addElement("clear A");
 		//initialState.addElement("clear B");
 		//initialState.addElement("clear C");
-		initialState.addAll(Shape.make("A", "red"));
+		initialState.addAll(Triangle.make("A", "red"));
+		//initialState.addAll(Shape.make("B", "blue"));
 		initialState.addAll(Shape.make("B", "blue"));
 		initialState.addAll(Shape.make("C", "green"));
 
@@ -508,6 +561,102 @@ public class Planner {
 		/// PRIORITY
 		int priority8 = 10;
 		operators.addElement(new Operator(name8, ifList8, addList8, deleteList8, priority8, blockList8));
+
+		// OPERATOR 9
+		/// NAME:?yの名前は?x
+		String name9 = "?x is shape of ?y";
+		/// IF
+		Vector<String> ifList9 = new Vector<>();
+		ifList9.addElement("#?x is shape of ?y");
+		ifList9.addElement("?x has shape of ?y");
+		ifList9.addElement("?x is name");
+		//ifList9.addElement("?x has shape of ?y");
+		ifList9.addElement("?x on ?z");
+		/// ADD-LIST
+		Vector<String> addList9 = new Vector<>();
+		addList9.addElement("?y on ?z");
+		/// DELETE-LIST
+		Vector<String> deleteList9 = new Vector<>();
+		deleteList9.addElement("?x on ?z");
+		/// BLOCK-LIST
+		Vector<String> blockList9 = new Vector<>();
+		blockList9.addElement("?x is shape of ?y");
+		blockList9.addElement("?z is a shape of ?x");
+		/// PRIORITY
+		int priority9 = 9;
+		operators.addElement(new Operator(name9, ifList9, addList9, deleteList9, priority9, blockList9));
+
+		// OPERATOR 10
+		/// NAME:?yの名前は?x
+		String name10 = "?x is shape of ?z";
+		/// IF
+		Vector<String> ifList10 = new Vector<>();
+		ifList10.addElement("#?x is shape of ?z");
+		ifList10.addElement("?x has shape of ?z");
+		ifList10.addElement("?x is name");
+		//ifList10.addElement("?x has shape of ?y");
+		ifList10.addElement("?y on ?x");
+		/// ADD-LIST
+		Vector<String> addList10 = new Vector<>();
+		addList10.addElement("?y on ?z");
+		/// DELETE-LIST
+		Vector<String> deleteList10 = new Vector<>();
+		deleteList10.addElement("?y on ?x");
+		/// BLOCK-LIST
+		Vector<String> blockList10 = new Vector<>();
+		blockList10.addElement("?x is shape of ?z");
+		blockList10.addElement("?y is a shape of ?x");
+		/// PRIORITY
+		int priority10 = 9;
+		operators.addElement(new Operator(name10, ifList10, addList10, deleteList10, priority10, blockList10));
+
+		// OPERATOR 11
+		/// NAME:?yの特徴は?x
+		String name11 = "?y is a shape of ?x";
+		/// IF
+		Vector<String> ifList11 = new Vector<>();
+		ifList11.addElement("#?y is a shape of ?x");
+		ifList11.addElement("?x has shape of ?y");
+		ifList11.addElement("?x is name");
+		//ifList11.addElement("?x has shape of ?y");
+		ifList11.addElement("?z on ?y");
+		/// ADD-LIST
+		Vector<String> addList11 = new Vector<>();
+		addList11.addElement("?z on ?x");
+		/// DELETE-LIST
+		Vector<String> deleteList11 = new Vector<>();
+		deleteList11.addElement("?z on ?y");
+		/// BLOCK-LIST
+		Vector<String> blockList11 = new Vector<>();
+		blockList11.addElement("?y is a shape of ?x");
+		blockList11.addElement("?x is shape of ?z");
+		/// PRIORITY
+		int priority11 = 10;
+		operators.addElement(new Operator(name11, ifList11, addList11, deleteList11, priority11, blockList11));
+
+		// OPERATOR 12
+		/// NAME:?yの特徴は?x
+		String name12 = "?z is a shape of ?x";
+		/// IF
+		Vector<String> ifList12 = new Vector<>();
+		ifList12.addElement("#?z is a shape of ?x");
+		ifList12.addElement("?x has shape of ?z");
+		ifList12.addElement("?x is name");
+		//ifList12.addElement("?x has shape of ?y");
+		ifList12.addElement("?z on ?y");
+		/// ADD-LIST
+		Vector<String> addList12 = new Vector<>();
+		addList12.addElement("?x on ?y");
+		/// DELETE-LIST
+		Vector<String> deleteList12 = new Vector<>();
+		deleteList12.addElement("?z on ?y");
+		/// BLOCK-LIST
+		Vector<String> blockList12 = new Vector<>();
+		blockList12.addElement("?z is a shape of ?x");
+		blockList12.addElement("?x is shape of ?y");
+		/// PRIORITY
+		int priority12 = 10;
+		operators.addElement(new Operator(name12, ifList12, addList12, deleteList12, priority12, blockList12));
 
 		sortOp();
 
