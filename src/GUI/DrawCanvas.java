@@ -4,6 +4,7 @@ import javax.swing.JPanel;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.HashMap;
 import java.util.Scanner;
 
 /**
@@ -17,20 +18,33 @@ public class DrawCanvas extends JPanel {
     static Scanner stdin = new Scanner(System.in);
 
     private int holding;
-    // 一番上はholding用 board[row][col]
+    /**
+     * 一番上はholding用 board[row][col]
+     */
     private GraphicShape[][] board;
+    private HashMap<String,GraphicShape> shapeMap;
     private static final int boxNum = 3;
 
-    static final int CanvasX = margin + boxNum * (rectSize+margin)+margin;
-    static final int CanvasY = 100 + (boxNum+1) * (rectSize+margin)+margin;
+    /**
+     * CanvasWidth
+     */
+    static final int CanvasX = margin + boxNum * (rectSize + margin) + margin;
+    /**
+     * CanvasHeight
+     */
+    static final int CanvasY = 100 + (boxNum + 1) * (rectSize + margin) + margin;
 
     public void init() {
         board = new GraphicShape[boxNum + 1][boxNum];
+        shapeMap = new HashMap<>();
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                if (i == 0)
-                    board[i][j] = new GraphicShape("No." + j, "red", "rect", "table");
-                else
+                if (i == 0) {
+                    GraphicShape gs = new GraphicShape("No." + j, "red", "rect", "table");
+                    gs.setPoint(i, j);
+                    board[i][j] = gs;
+                    shapeMap.put(gs.getName(),gs);                    
+                } else
                     board[i][j] = null;
             }
         }
@@ -39,16 +53,20 @@ public class DrawCanvas extends JPanel {
     public void pickUp() {
         int col = selectHold();
         holding = col;
-        board[boxNum][col] = board[holdTop(col)][col];
-        board[holdTop(col)][col] = null;
+        int top = holdTop(col);
+        board[boxNum][col] = board[top][col];
+        board[top][col].setPoint(top, col);
+        board[top][col] = null;
         repaint();
-        dropDown(col);
+        dropDown();
     }
 
-    private void dropDown(int preCol) {
+    private void dropDown() {
         int col = selectDrop();
-        board[holdTop(col) + 1][col] = board[boxNum][preCol];
-        board[boxNum][preCol] = null;
+        int top = holdTop(col);
+        board[top + 1][col] = board[boxNum][holding];
+        board[top + 1][col].setPoint(top + 1, col);
+        board[boxNum][holding] = null;
         holding = col;
         repaint();
         pickUp();
@@ -96,17 +114,17 @@ public class DrawCanvas extends JPanel {
         super.paintComponent(g);
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
-                int startX = margin + col * (rectSize+margin);
-                int startY = margin + (boxNum - row) * (rectSize+margin);
+                int startX = margin + col * (rectSize + margin);
+                int startY = margin + (boxNum - row) * (rectSize + margin);
                 if (board[row][col] != null) {
                     g.setColor(board[row][col].getColor());
                     putShape(board[row][col], startX, startY, g);
                 }
                 if (row == board.length - 1 && holding == col) {
                     g.setColor(Color.BLACK);
-                    int pointX[] = {startX - holdMargin,startX + rectSize + holdMargin};
-                    int pointY[] = {startY - holdMargin,startY - holdMargin};
-                    g.drawPolyline(pointX,pointY,pointX.length);
+                    int pointX[] = { startX - holdMargin, startX + rectSize + holdMargin };
+                    int pointY[] = { startY - holdMargin, startY - holdMargin };
+                    g.drawPolyline(pointX, pointY, pointX.length);
                 }
             }
         }
@@ -115,6 +133,7 @@ public class DrawCanvas extends JPanel {
     private void putShape(GraphicShape gs, int x, int y, Graphics g) {
         g.fillRect(x, y, rectSize, rectSize);
         g.setColor(Color.black);
-        g.drawString(gs.getName(), x+rectSize, y+rectSize);
+        g.drawString(gs.getName(), x + rectSize, y + rectSize);
+        g.drawString(gs.getRow()+","+gs.getCol(), x + margin, y + margin);
     }
 }

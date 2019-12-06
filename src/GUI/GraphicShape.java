@@ -10,10 +10,12 @@ import java.awt.Color;
  */
 public class GraphicShape {
 
-    String name;
-    String color;
-    String shape;
-    String on;
+    private String name;
+    private String color;
+    private String shape;
+    private String on;
+    private int row;
+    private int col;
     public static HashMap<String,Color> colorMap = new HashMap<>();
     public static HashMap<String,String> nameMap = new HashMap<>();
 
@@ -42,6 +44,19 @@ public class GraphicShape {
         this.color = color;
         this.shape = shape;
         this.on = on;
+    }
+
+    public void setPoint(int row,int col){
+        this.row = row;
+        this.col = col;
+    }
+
+    public int getCol(){
+        return col;
+    }
+
+    public int getRow(){
+        return row;
     }
 
     public String getOn() {
