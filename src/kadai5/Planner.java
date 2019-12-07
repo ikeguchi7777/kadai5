@@ -84,7 +84,7 @@ public class Planner {
 	 * @param initialState
 	 * @return plan
 	 */
-	public Vector<Operator> GUIStart(Vector<String> goalList,Vector<String> initialState) {
+	public Vector<Operator> GUIStart(Vector<String> goalList, Vector<String> initialState) {
 		blockNext.removeAllElements();
 		initOperators();
 		Vector<String> blockList = initBlockList(initialState);
@@ -342,10 +342,10 @@ public class Planner {
 		//initialState.addElement("clear A");
 		//initialState.addElement("clear B");
 		//initialState.addElement("clear C");
-		initialState.addAll(Triangle.make("A", "red"));
+		initialState.addAll(Shape.make("A", "red", "triangle"));
 		//initialState.addAll(Shape.make("B", "blue"));
-		initialState.addAll(Shape.make("B", "blue"));
-		initialState.addAll(Shape.make("C", "green"));
+		initialState.addAll(Shape.make("B", "blue", "rect"));
+		initialState.addAll(Shape.make("C", "green", "rect"));
 
 		//initialState.addElement("ontable A");
 		//initialState.addElement("ontable B");
