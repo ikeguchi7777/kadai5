@@ -17,8 +17,15 @@ public class MakeGUI {
     }
 
     public static void MakePlannerGUI() {
+        
         FrameBase frame = new FrameBase("Planner", DrawCanvas.CanvasX, DrawCanvas.CanvasY);
+        // Draw Space
+        DrawCanvas panelDraw = new DrawCanvas();
+        Thread th = new Thread(panelDraw);
+        //JLabel labelBox1 = new JLabel("BOX1");
 
+        //panelDraw.add(labelBox1);
+        
         // top of Control Button
         ActionListener listener = new ActionListener() {
 
@@ -26,6 +33,8 @@ public class MakeGUI {
             public void actionPerformed(ActionEvent e) {
                 switch (e.getActionCommand()) {
                 case "nextStep":
+                    DrawCanvas.index++;
+                    panelDraw.notifyAll();
                     break;
                 case "skipAll":
                     break;
@@ -57,20 +66,14 @@ public class MakeGUI {
         panelCtrl.add(btnExit);
         // end of Control button
 
-        // Draw Space
-        DrawCanvas panelDraw = new DrawCanvas();
-        panelDraw.init();
-        //JLabel labelBox1 = new JLabel("BOX1");
-
-        //panelDraw.add(labelBox1);
-
         // Set panel position
         Container contentPane = frame.getContentPane();
         contentPane.add(panelCtrl, BorderLayout.NORTH);
         contentPane.add(panelDraw, BorderLayout.CENTER);
 
         frame.setVisible(true);
-        panelDraw.pickUp();
+        th.start();
+        //panelDraw.pickUp();
     }
 
 }

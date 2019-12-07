@@ -32,6 +32,10 @@ public class Operator {
 		blockList=theBlockList;
 	}
 
+	public String getName(){
+		return name;
+	}
+
 	public Vector<String> getAddList() {
 		return new Vector<>(addList);
 	}
