@@ -17,15 +17,15 @@ public class MakeGUI {
     }
 
     public static void MakePlannerGUI() {
-        
+
         FrameBase frame = new FrameBase("Planner", DrawCanvas.CanvasX, DrawCanvas.CanvasY);
         // Draw Space
         DrawCanvas panelDraw = new DrawCanvas();
-        Thread th = new Thread(panelDraw);
-        //JLabel labelBox1 = new JLabel("BOX1");
+        panelDraw.init();
+        // JLabel labelBox1 = new JLabel("BOX1");
 
-        //panelDraw.add(labelBox1);
-        
+        // panelDraw.add(labelBox1);
+
         // top of Control Button
         ActionListener listener = new ActionListener() {
 
@@ -34,7 +34,9 @@ public class MakeGUI {
                 switch (e.getActionCommand()) {
                 case "nextStep":
                     DrawCanvas.index++;
-                    panelDraw.notifyAll();
+                    synchronized (panelDraw) {
+                        panelDraw.notifyAll();
+                    }
                     break;
                 case "skipAll":
                     break;
@@ -72,8 +74,9 @@ public class MakeGUI {
         contentPane.add(panelDraw, BorderLayout.CENTER);
 
         frame.setVisible(true);
+        Thread th = new Thread(panelDraw);
         th.start();
-        //panelDraw.pickUp();
+        // panelDraw.pickUp();
     }
 
 }

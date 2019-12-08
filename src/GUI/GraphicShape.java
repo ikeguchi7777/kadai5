@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import kadai5.Operator;
 import kadai5.Unifier;
 
 import java.awt.Color;
@@ -89,7 +88,7 @@ public class GraphicShape {
     }
 
     public String getName() {
-        return nameMap.get(name);
+        return name;
     }
 
     /**
@@ -114,7 +113,7 @@ public class GraphicShape {
                 var.clear();
                 continue;
             }
-            if((new Unifier()).unify("?name has a characteristec og ?color",string,var)){
+            if((new Unifier()).unify("?name has a characteristic of ?color",string,var)){
                 shapeMap.get(var.get("?name")).setColor(var.get("?color"));
                 var.clear();
                 continue;

@@ -5,7 +5,6 @@ import javax.swing.JPanel;
 import kadai5.Operator;
 import kadai5.Planner;
 import kadai5.Shape;
-import kadai5.Triangle;
 import kadai5.Unifier;
 
 import java.awt.Color;
@@ -49,7 +48,7 @@ public class DrawCanvas extends JPanel implements Runnable {
      */
     public Vector<String> initState() {
         Vector<String> initialState = new Vector<String>();
-        initialState.addAll(Triangle.make("A", "red"));
+        initialState.addAll(Shape.make("A", "red","triangle"));
         initialState.addAll(Shape.make("B", "blue"));
         initialState.addAll(Shape.make("C", "green"));
         initialState.addElement("handEmpty");
@@ -70,7 +69,8 @@ public class DrawCanvas extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        init();
+        Planner plan = new Planner();
+        parseOperation(plan.GUIStart(goalList(), initState()));
     }
 
     /**
@@ -91,8 +91,6 @@ public class DrawCanvas extends JPanel implements Runnable {
                     board[i][j] = null;
             }
         }
-        Planner plan = new Planner();
-        parseOperation(plan.GUIStart(goalList(), initState()));
     }
 
     /**
@@ -119,6 +117,11 @@ public class DrawCanvas extends JPanel implements Runnable {
         Hashtable<String, String> var = new Hashtable<>();
         index = 0;
         while (true) {
+            System.out.println(op.get(index).getName());
+            if(index>=op.size()){
+                init();
+                index = 0;
+            }
             if (isStop) {
                 try {
                     wait();
@@ -129,19 +132,75 @@ public class DrawCanvas extends JPanel implements Runnable {
             if ((new Unifier()).unify("Place ?x on ?y", op.get(index).getName(), var)) {
                 GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
                 GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
-                int col = gs2.getCol();
-                drop(gs1, col);
+                drop(gs1, gs2);
+            }
+            if ((new Unifier()).unify("remove ?x from on top ?y", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
+                pickUp(gs1, gs2);
+            }
+            if ((new Unifier()).unify("pick up ?x from the table", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                pickUp(gs1, null);
+            }
+            if ((new Unifier()).unify("put ?x down on the table", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                drop(gs1,null);
             }
             repaint();
         }
     }
 
-    void drop(GraphicShape gs, int col) {
-
+    /**
+     * on = nullでテーブル
+     * @param gs
+     * @param on
+     */
+    void drop(GraphicShape gs,GraphicShape on) {
+        int col = -1;
+        if(on==null){
+            col = searchTable();
+        }else{
+            col = on.getCol();
+        }
+        int row = on.getRow()+1;
+        board[gs.getRow()][gs.getCol()]= null;
+        board[row][col] = gs;
+        gs.setPoint(row, col);
+        holding = col;
+        repaint();
+        /*
+        int col = selectDrop();
+        int top = holdTop(col);
+        board[top + 1][col] = board[boxNum][holding];
+        board[top + 1][col].setPoint(top + 1, col);
+        board[boxNum][holding] = null;
+        holding = col;
+        repaint();
+         */
     }
 
-    void pickUp(GraphicShape gs, int col) {
+    /**
+     * on = nullでテーブル
+     * @param gs
+     * @param on
+     */
+    void pickUp(GraphicShape gs, GraphicShape on) {
+        int col = gs.getCol();
+        holding = col;
+        int row = gs.getRow();
+        board[board[0].length][col] = gs;
+        gs.setPoint(board[0].length, col);
+        board[row][col] = null;
+        repaint();
+    }
 
+    int searchTable(){
+        for (int i = 0; i < board.length; i++) {
+            if(board[0][i]==null)
+            return i;
+        }
+        return -1;
     }
 
     /**
