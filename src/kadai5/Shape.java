@@ -14,7 +14,16 @@ public class Shape {
 	public static Vector<String> make(String name, String... characteristics) {
 		Vector<String> result = make(name);
 		for (String chara : characteristics) {
-			result.add(name + " has a characteristic of " + chara);
+			switch (chara) {
+			case "triangle":
+				result.add("#Place ?* on " + name);
+			case "rect":
+				result.add(name + " has shape of " + chara);
+				break;
+			default:
+				result.add(name + " has a characteristic of " + chara);
+				break;
+			}
 		}
 		return result;
 	}
