@@ -22,24 +22,28 @@ public class DrawCanvas extends JPanel implements Runnable {
     static final int margin = 30;
     static final int holdMargin = 5;
     static Scanner stdin = new Scanner(System.in);
-    static boolean isStop = true;
-    public static int index = 0;
-
+    private boolean isStop;
+    private int index;
     private int holding;
     /**
      * 一番上はholding用 board[row][col]
      */
     private GraphicShape[][] board;
-    private static final int boxNum = 3;
+    private int boxNum;
 
     /**
      * CanvasWidth
      */
-    static final int CanvasX = margin + boxNum * (rectSize + margin) + margin;
+    public int sizeX() {
+        return margin + boxNum * (rectSize + margin) + margin;
+    }
+
     /**
      * CanvasHeight
      */
-    static final int CanvasY = 100 + (boxNum + 1) * (rectSize + margin) + margin;
+    public int sizeY() {
+        return 100 + (boxNum + 1) * (rectSize + margin) + margin;
+    }
 
     /**
      * 初期状態の設定
@@ -48,7 +52,7 @@ public class DrawCanvas extends JPanel implements Runnable {
      */
     public Vector<String> initState() {
         Vector<String> initialState = new Vector<String>();
-        initialState.addAll(Shape.make("A", "red","triangle"));
+        initialState.addAll(Shape.make("A", "red", "triangle"));
         initialState.addAll(Shape.make("B", "blue"));
         initialState.addAll(Shape.make("C", "green"));
         initialState.addElement("handEmpty");
@@ -79,8 +83,8 @@ public class DrawCanvas extends JPanel implements Runnable {
      */
     public void init() {
         Vector<GraphicShape> shapes = GraphicShape.parseState(initState());
-        int num = shapes.size();
-        board = new GraphicShape[num + 1][num];
+        boxNum = shapes.size();
+        board = new GraphicShape[boxNum + 1][boxNum];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 if (i == 0) {
@@ -91,6 +95,8 @@ public class DrawCanvas extends JPanel implements Runnable {
                     board[i][j] = null;
             }
         }
+        isStop = true;
+        System.out.println("board was initialized!");
     }
 
     /**
@@ -116,162 +122,97 @@ public class DrawCanvas extends JPanel implements Runnable {
     synchronized public void parseOperation(Vector<Operator> op) {
         Hashtable<String, String> var = new Hashtable<>();
         index = 0;
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         while (true) {
             System.out.println(op.get(index).getName());
-            if(index>=op.size()){
-                init();
-                index = 0;
+            var = new Hashtable<>();
+            boolean opereated = true;
+            if ((new Unifier()).unify("Place ?x on ?y", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
+                drop(gs1, gs2);
+            } else if ((new Unifier()).unify("remove ?x from on top ?y", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                pickUp(gs1);
+            } else if ((new Unifier()).unify("pick up ?x from the table", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                pickUp(gs1);
+            } else if ((new Unifier()).unify("put ?x down on the table", op.get(index).getName(), var)) {
+                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                drop(gs1, null);
+            } else {
+                opereated = false;
             }
-            if (isStop) {
+            // ボタン押下後の処理
+            if (isStop && opereated) {
                 try {
                     wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            if ((new Unifier()).unify("Place ?x on ?y", op.get(index).getName(), var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
-                GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
-                drop(gs1, gs2);
+            index++;
+            if (index >= op.size()) {
+                System.out.println("This is the Goal!");
+                break;
             }
-            if ((new Unifier()).unify("remove ?x from on top ?y", op.get(index).getName(), var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
-                GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
-                pickUp(gs1, gs2);
-            }
-            if ((new Unifier()).unify("pick up ?x from the table", op.get(index).getName(), var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
-                pickUp(gs1, null);
-            }
-            if ((new Unifier()).unify("put ?x down on the table", op.get(index).getName(), var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
-                drop(gs1,null);
-            }
-            repaint();
         }
     }
 
     /**
      * on = nullでテーブル
+     * 
      * @param gs
      * @param on
      */
-    void drop(GraphicShape gs,GraphicShape on) {
+    void drop(GraphicShape gs, GraphicShape on) {
         int col = -1;
-        if(on==null){
+        int row = 0;
+        if (on == null) {
             col = searchTable();
-        }else{
+        } else {
             col = on.getCol();
+            row = on.getRow() + 1;
         }
-        int row = on.getRow()+1;
-        board[gs.getRow()][gs.getCol()]= null;
+        board[gs.getRow()][gs.getCol()] = null;
         board[row][col] = gs;
         gs.setPoint(row, col);
         holding = col;
         repaint();
-        /*
-        int col = selectDrop();
-        int top = holdTop(col);
-        board[top + 1][col] = board[boxNum][holding];
-        board[top + 1][col].setPoint(top + 1, col);
-        board[boxNum][holding] = null;
-        holding = col;
-        repaint();
-         */
     }
 
     /**
-     * on = nullでテーブル
+     * 正直、何の上かって関係なくない？Plannerで調べてる訳だし...
+     * 
      * @param gs
-     * @param on
      */
-    void pickUp(GraphicShape gs, GraphicShape on) {
+    void pickUp(GraphicShape gs) {
         int col = gs.getCol();
         holding = col;
         int row = gs.getRow();
-        board[board[0].length][col] = gs;
-        gs.setPoint(board[0].length, col);
+        board[board.length - 1][col] = gs;
+        gs.setPoint(board.length - 1, col);
         board[row][col] = null;
         repaint();
     }
 
-    int searchTable(){
+    int searchTable() {
         for (int i = 0; i < board.length; i++) {
-            if(board[0][i]==null)
-            return i;
+            if (board[0][i] == null)
+                return i;
         }
         return -1;
     }
 
     /**
-     * CUIテスト用
+     * for skipAll button
      */
-    public void pickUp() {
-        int col = selectHold();
-        holding = col;
-        int top = holdTop(col);
-        board[boxNum][col] = board[top][col];
-        board[top][col].setPoint(top, col);
-        board[top][col] = null;
-        repaint();
-        dropDown();
-    }
-
-    /**
-     * CUIテスト用
-     */
-    private void dropDown() {
-        int col = selectDrop();
-        int top = holdTop(col);
-        board[top + 1][col] = board[boxNum][holding];
-        board[top + 1][col].setPoint(top + 1, col);
-        board[boxNum][holding] = null;
-        holding = col;
-        repaint();
-        pickUp();
-    }
-
-    /**
-     * CUIテスト用
-     */
-    private int selectDrop() {
-        System.out.print("select drop:");
-        int select = stdin.nextInt();
-        while (select < 0 || select >= boxNum) {
-            System.out.println("can't drop:" + select);
-            System.out.print("select drop:");
-            select = stdin.nextInt();
-        }
-        return select;
-    }
-
-    /**
-     * CUIテスト用
-     */
-    private int selectHold() {
-        System.out.print("select hold:");
-        int select = stdin.nextInt();
-        while (select < 0 || select >= boxNum || board[0][select] == null) {
-            System.out.println("can't hold:" + select);
-            System.out.print("select hold:");
-            select = stdin.nextInt();
-        }
-        return select;
-    }
-
-    /**
-     * scan board from the top
-     * 
-     * @param col
-     * @return top index or -1 when no object
-     */
-    private int holdTop(int col) {
-        // scan from the top
-        for (int row = boxNum - 1; row >= 0; row--) {
-            if (board[row][col] != null)
-                return row;
-        }
-        return -1;
+    public void skipAll() {
+        isStop = false;
     }
 
     @Override
