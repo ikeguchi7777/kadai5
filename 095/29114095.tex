@@ -1,0 +1,188 @@
+\documentclass[a4j]{jarticle}
+
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+\usepackage{here}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題5}
+\author{グループ07\\
+  29114095 野竹浩二朗\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年11月25日}
+
+\begin{document}
+\maketitle
+
+\paragraph{提出物} rep3
+\paragraph{グループ} グループ07
+\paragraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline\hline
+  学籍番号&名前&貢献度\\
+  \hline\hline
+  29114007&池口弘尚&\\
+  \hline
+  29114031&大原拓人&\\
+  \hline
+  29114048&北原太一&\\
+  \hline
+  29114086&飛世裕貴&\\
+  \hline
+  29114095&野竹浩二朗&\\
+  \hline
+\end{tabular}
+
+
+
+\section{課題の説明}
+\begin{description}
+\item[課題5-1] 目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
+また，もしあったならその箇所を修正し，どのように修正したか記せ．
+
+\item[課題5-2] 教科書のプログラムでは，オペレータ間の競合解消戦略としてランダムなオペレータ選択を採用している．
+これを，効果的な競合解消戦略に改良すべく考察し，実装せよ．
+改良の結果，性能がどの程度向上したかを定量的に（つまり数字で）示すこと．
+
+\item[課題5-3] 上記のプランニングのプログラムでは，ブロックの属性（たとえば色や形など）を考えていないので，色や形などの属性を扱えるようにせよ．ルールとして表現すること．
+例えば色と形の両方を扱えるようにする場合，Aが青い三角形，Bが黄色の四角形，Cが緑の台形であったとする．
+その時，色と形を使ってもゴールを指定できるようにする（"green on blue" や"blue on box"のように）
+
+\item[課題5-4]上記5-2, 5-3で改良したプランニングシステムのGUIを実装せよ．
+ブロック操作の過程をグラフィカルに可視化し，初期状態や目標状態をGUI上で変更できることが望ましい．
+
+\end{description}
+私が担当したのは課題5－2である。
+\section{課題5-2}
+\begin{screen}
+教科書のプログラムでは，オペレータ間の競合解消戦略としてランダムなオペレータ選択を採用している．
+これを，効果的な競合解消戦略に改良すべく考察し，実装せよ．
+改良の結果，性能がどの程度向上したかを定量的に（つまり数字で）示すこと．
+\end{screen}
+
+\subsection{手法}
+オペレータに優先度をつけ,その優先度順にソートし次のオペレータを決定していく.
+
+\subsection{実装}
+まず，優先度をつけても動作するよう,コンストラクタにint型のpriorityを追加した．それに応じて，Operatorクラスに以下の変更を行った．
+\begin{itemize}
+\item 優先度を返すgetPriority()メソッドを追加
+\item toStringメソッドで優先度も出力できるよう，priorityの値を追加
+\end{itemize}
+また，PlannerクラスのinitOperatorsメソッドも変更した．以下に例を示す．
+\begin{lstlisting}
+		// OPERATOR 1
+		/// NAME
+		String name1 = new String("Place ?x on ?y");
+		/// IF
+		Vector<String> ifList1 = new Vector<String>();
+		ifList1.addElement("#Place ?x on ?y");
+		ifList1.addElement("?x is name");
+		ifList1.addElement("?y is name");
+		ifList1.addElement(new String("clear ?y"));
+		ifList1.addElement(new String("holding ?x"));
+		/// ADD-LIST
+		Vector<String> addList1 = new Vector<String>();
+		addList1.addElement(new String("?x on ?y"));
+		addList1.addElement(new String("clear ?x"));
+		addList1.addElement(new String("handEmpty"));
+		/// DELETE-LIST
+		Vector<String> deleteList1 = new Vector<String>();
+		deleteList1.addElement(new String("clear ?y"));
+		deleteList1.addElement(new String("holding ?x"));
+		/// BLOCK-LIST
+		Vector<String> blockList1 = new Vector<>();
+		blockList1.addElement("remove ?x from on top ?y");
+		blockList1.addElement("Place ?x on ?y");
+		// PRIORITY
+		int priority1 = 2;
+		Operator operator1 = new Operator(name1, ifList1, addList1, deleteList1, priority1, blockList1);
+		operators.addElement(operator1);
+\end{lstlisting}
+これはyの上にxを置くというオペレータだが，最後に優先度を表すpriority1を設定している．\\
+ランダムでオペレータを決定した場合と優先度をつけてオペレータを決定する場合とでどの程度効率に差が出たかを示すため，メインメソッドを以下のように変更し，ミリ秒単位でどれだけ時間がかかったかを出力した．\\
+\begin{lstlisting}
+public static void main(String argv[]) {
+	long startTime = System.currentTimeMillis();
+	(new Planner()).start();
+	long endTime = System.currentTimeMillis();
+	long totalTime = et - st;
+	System.out.println("time:" + totalTime);
+}
+\end{lstlisting}
+今回，オペレータに以下のように優先度を割り振った．\\
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+オペレータ & 優先度 \\ \hline
+Place ?x on ?y & 2 \\ \hline
+remove ?x from on top ?y & 3 \\ \hline
+pick up ?x from the table & 1 \\ \hline
+put ?x down on the table & 4 \\ \hline
+\end{tabular}
+\end{center}
+\caption{割り振った優先度}
+\end{table}
+この優先度は，「まずテーブルの上のものを持ち他のものに置く」という基本の動作を優先的に行うために値を割り振った．
+\section{実行結果}
+出力された結果すべてを載せると長くなってしまうため，ループの回数のみを示す．\\
+まず，初期のランダムで次のオペレータを選択する場合を20回分行った結果を示す．\\
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+598  & 1240  & 694    & 29815 & 10104   \\ \hline
+2352   & 424  & 1322    & 11140  & 1484   \\ \hline
+1028   & 3693  & 511  & 2771 & 137942  \\ \hline
+27828   & 496 & 34022   & 516  & 1621 \\ \hline
+\end{tabular}
+\end{center}
+\caption{かかった時間(ミリ秒)}
+\end{table}
+このような結果になる．平均約13480ミリ秒となった．\\
+優先度をつけた場合の結果を以下に示す．
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+1000  & 901  & 1067 & 927 & 946   \\ \hline
+863  & 1050  & 1120 & 1235 & 1547 \\ \hline
+1444   & 1024 & 1074 & 1570 & 1014  \\ \hline
+1132   & 1048 & 884  & 1056  & 1148 \\ \hline
+\end{tabular}
+\end{center}
+\caption{かかった時間(ミリ秒)}
+\end{table}
+こちらの平均は約1103ミリ秒となる．
+ランダムで選択した場合，約400ミリ秒という短い時間で終了する場合もあるが，極端に時間がかかってしまう場合もある．一方，優先度をつけた場合は，約1000ミリ秒前後のループとなってしまうが，安定してある程度の速さで結果を求めることができる．
+\section{考察}
+今回のプログラムは，ループ文や再起呼び出しを利用しており，悪手を取ってしまうと極端に効率が落ちてしまうことが分かった．\\
+今回のように固定の優先度ではなく，「この動作の後はこの動作の方が良い」といった場合分けで優先度を変化させていくことができればさらに効率を良くすることができると考える．
+
+\section{感想}
+\end{document}
