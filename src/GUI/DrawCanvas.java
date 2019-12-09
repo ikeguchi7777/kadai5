@@ -22,16 +22,18 @@ public class DrawCanvas extends JPanel {
     static final int margin = 20;
     static final int holdMargin = 3;
     static Scanner stdin = new Scanner(System.in);
-    private boolean isStop;
     private int index;
     private int holding;
     private String state;
+    private int boxNum;
+    /**
+     * Plannerで生成した手順を格納
+     */
     private Vector<Operator> op;
     /**
      * 一番上はholding用 board[row][col]
      */
     private GraphicShape[][] board;
-    private int boxNum;
 
     /**
      * CanvasWidth
@@ -81,8 +83,8 @@ public class DrawCanvas extends JPanel {
      * 初期状態の設定後、GraphicShapeの一覧を作成。 boardに格納しつつshapeMapに登録、さらに自身に座標を記憶させる。
      * boardの初期化が終わったら、目標状態の設定に移る。
      */
-    public void init() {
-        Vector<GraphicShape> shapes = GraphicShape.parseState(initState());
+    public void init(Vector<String> initState,Vector<String> goalList) {
+        Vector<GraphicShape> shapes = GraphicShape.parseState(initState);
         boxNum = shapes.size();
         board = new GraphicShape[boxNum + 1][boxNum];
         for (int i = 0; i < board.length; i++) {
@@ -95,13 +97,13 @@ public class DrawCanvas extends JPanel {
                     board[i][j] = null;
             }
         }
-        isStop = true;
         holding = 0;
         index = 0;
         state = "board was initialized!";
+        repaint();
         System.out.println("board was initialized!");
         Planner plan = new Planner();
-        op = plan.GUIStart(goalList(), initState());
+        op = plan.GUIStart(goalList, initState);
     }
 
     /**
@@ -212,6 +214,11 @@ public class DrawCanvas extends JPanel {
         return -1;
     }
 
+    /**
+     * for nextStep button
+     * 
+     * @return if oparation has finished
+     */
     public boolean nextStep() {
         return parseOperation();
     }
@@ -220,7 +227,8 @@ public class DrawCanvas extends JPanel {
      * for skipAll button
      */
     public void skipAll() {
-        while(!nextStep());
+        while (!nextStep())
+            ;
     }
 
     @Override
