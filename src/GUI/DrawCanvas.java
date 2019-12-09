@@ -16,15 +16,17 @@ import java.util.Vector;
 /**
  * DrawCanvas
  */
-public class DrawCanvas extends JPanel implements Runnable {
+public class DrawCanvas extends JPanel {
 
-    static final int rectSize = 120;
-    static final int margin = 30;
-    static final int holdMargin = 5;
+    static final int rectSize = 100;
+    static final int margin = 20;
+    static final int holdMargin = 3;
     static Scanner stdin = new Scanner(System.in);
     private boolean isStop;
     private int index;
     private int holding;
+    private String state;
+    private Vector<Operator> op;
     /**
      * 一番上はholding用 board[row][col]
      */
@@ -42,7 +44,11 @@ public class DrawCanvas extends JPanel implements Runnable {
      * CanvasHeight
      */
     public int sizeY() {
-        return 100 + (boxNum + 1) * (rectSize + margin) + margin;
+        return 100 + (boxNum + 1) * (rectSize) + margin * 2;
+    }
+
+    public String getState() {
+        return state;
     }
 
     /**
@@ -71,12 +77,6 @@ public class DrawCanvas extends JPanel implements Runnable {
         return goalList;
     }
 
-    @Override
-    public void run() {
-        Planner plan = new Planner();
-        parseOperation(plan.GUIStart(goalList(), initState()));
-    }
-
     /**
      * 初期状態の設定後、GraphicShapeの一覧を作成。 boardに格納しつつshapeMapに登録、さらに自身に座標を記憶させる。
      * boardの初期化が終わったら、目標状態の設定に移る。
@@ -96,7 +96,12 @@ public class DrawCanvas extends JPanel implements Runnable {
             }
         }
         isStop = true;
+        holding = 0;
+        index = 0;
+        state = "board was initialized!";
         System.out.println("board was initialized!");
+        Planner plan = new Planner();
+        op = plan.GUIStart(goalList(), initState());
     }
 
     /**
@@ -118,49 +123,48 @@ public class DrawCanvas extends JPanel implements Runnable {
      * </p>
      * 
      * @param op
+     * @return if operation has finished
      */
-    synchronized public void parseOperation(Vector<Operator> op) {
-        Hashtable<String, String> var = new Hashtable<>();
-        index = 0;
-        try {
-            wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public boolean parseOperation() {
+        if (op == null) {
+            state = "Can't find plan :(";
+            repaint();
+            return true;
         }
-        while (true) {
-            System.out.println(op.get(index).getName());
+        Hashtable<String, String> var = new Hashtable<>();
+        boolean oparated = false;
+        while (!oparated) {
+            if (index >= op.size()) {
+                state = "This is the Goal!";
+                repaint();
+                System.out.println("This is the Goal!");
+                return true;
+            }
+            String oparation = op.get(index).getName();
+            state = oparation;
+            System.out.println(oparation);
             var = new Hashtable<>();
-            boolean opereated = true;
-            if ((new Unifier()).unify("Place ?x on ?y", op.get(index).getName(), var)) {
+            oparated = true;
+            if ((new Unifier()).unify("Place ?x on ?y", oparation, var)) {
                 GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
                 GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
                 drop(gs1, gs2);
-            } else if ((new Unifier()).unify("remove ?x from on top ?y", op.get(index).getName(), var)) {
+            } else if ((new Unifier()).unify("remove ?x from on top ?y", oparation, var)) {
                 GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
                 pickUp(gs1);
-            } else if ((new Unifier()).unify("pick up ?x from the table", op.get(index).getName(), var)) {
+            } else if ((new Unifier()).unify("pick up ?x from the table", oparation, var)) {
                 GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
                 pickUp(gs1);
-            } else if ((new Unifier()).unify("put ?x down on the table", op.get(index).getName(), var)) {
+            } else if ((new Unifier()).unify("put ?x down on the table", oparation, var)) {
                 GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
                 drop(gs1, null);
             } else {
-                opereated = false;
-            }
-            // ボタン押下後の処理
-            if (isStop && opereated) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                // skip no oparation
+                oparated = false;
             }
             index++;
-            if (index >= op.size()) {
-                System.out.println("This is the Goal!");
-                break;
-            }
         }
+        return false;
     }
 
     /**
@@ -208,11 +212,15 @@ public class DrawCanvas extends JPanel implements Runnable {
         return -1;
     }
 
+    public boolean nextStep() {
+        return parseOperation();
+    }
+
     /**
      * for skipAll button
      */
     public void skipAll() {
-        isStop = false;
+        while(!nextStep());
     }
 
     @Override
@@ -222,7 +230,7 @@ public class DrawCanvas extends JPanel implements Runnable {
             for (int col = 0; col < board[row].length; col++) {
                 // 描画位置の取得
                 int startX = margin + col * (rectSize + margin);
-                int startY = margin + (boxNum - row) * (rectSize + margin);
+                int startY = margin + (boxNum - row) * (rectSize);
                 if (board[row][col] != null) {
                     g.setColor(board[row][col].getColor());
                     putShape(board[row][col], startX, startY, g);

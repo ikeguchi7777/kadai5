@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.BorderLayout;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
@@ -20,30 +21,34 @@ public class MakeGUI {
         // Draw Space
         DrawCanvas panelDraw = new DrawCanvas();
         panelDraw.init();
-        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY());
+
+        JLabel label1 = new JLabel("");
+        label1.setText(panelDraw.getState());
 
         // top of Control Button
         ActionListener listener = new ActionListener() {
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 switch (e.getActionCommand()) {
                 case "nextStep":
-                    synchronized (panelDraw) {
-                        panelDraw.notifyAll();
-                    }
+                    panelDraw.parseOperation();
                     break;
                 case "skipAll":
                     panelDraw.skipAll();
-                    synchronized (panelDraw) {
-                        panelDraw.notifyAll();
-                    }
                     break;
                 case "exit":
                     System.exit(0);
                     break;
+                case "reset":
+                    panelDraw.init();
+                    panelDraw.repaint();
+                    break;
                 default:
+                    System.out.println("can't resolve cmd:(");
                     break;
                 }
+                label1.setText(panelDraw.getState());
             }
         };
         JPanel panelCtrl = new JPanel();
@@ -60,19 +65,24 @@ public class MakeGUI {
         btnExit.addActionListener(listener);
         btnExit.setActionCommand("exit");
 
+        JButton btnReset = new JButton("Reset");
+        btnReset.addActionListener(listener);
+        btnReset.setActionCommand("reset");
+
         panelCtrl.add(btnNext);
         panelCtrl.add(btnSkip);
         panelCtrl.add(btnExit);
+        panelCtrl.add(btnReset);
         // bottom of Control button
 
+        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY());
         // Set panel position
         Container contentPane = frame.getContentPane();
         contentPane.add(panelCtrl, BorderLayout.NORTH);
+        contentPane.add(label1, BorderLayout.SOUTH);
         contentPane.add(panelDraw, BorderLayout.CENTER);
 
         frame.setVisible(true);
-        Thread th = new Thread(panelDraw);
-        th.start();
     }
 
 }

@@ -39,6 +39,7 @@ public class GraphicShape {
 
     /**
      * initialize by input value
+     * 
      * @param name
      * @param color
      * @param shape
