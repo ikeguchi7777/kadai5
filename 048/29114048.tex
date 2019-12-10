@@ -1,0 +1,130 @@
+\documentclass{jarticle}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題5}
+\author{グループ7\\
+  29114048 北原 太一\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年12月2日}
+
+\begin{document}
+\maketitle
+
+\subparagraph{提出物} rep5
+\subparagraph{グループ} グループ7
+\subparagraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline
+  学生番号&氏名&貢献度比率\\
+  \hline\hline
+  29114007&池口弘尚&100\\
+  \hline
+  29114031&大原拓人&100\\
+  \hline
+  29114048&北原太一&100\\
+  \hline
+  29114086&飛世裕貴&100\\
+  \hline
+  29114095&野竹浩二朗&100\\
+  \hline
+\end{tabular}
+
+\section{課題の説明}
+\begin{description}
+\item[課題5-1] 目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
+また，もしあったならその箇所を修正し、どのように修正したか記せ．
+\item[課題5-2] 教科書のプログラムでは，オペレータ間の競合解消戦略としてランダムなオペレータ選択を採用している．
+これを，効果的な競合解消戦略に改良すべく考察し，実装せよ．
+改良の結果，性能がどの程度向上したかを定量的に示すこと．
+\item[課題5-3] 上記のプランニングのプログラムでは，ブロックの属性を考えていないので，色や形などの属性を扱えるようにせよ．ルールとして表現すること．
+\item[課題5-4] 上記5-2, 5-3で改良したプランニングシステムのGUIを実装せよ．
+ブロック操作の過程をグラフィカルに可視化し，初期状態や目標状態をGUI上で変更できることが望ましい．
+\item[課題5-5] ブロックワールド内における物理的制約条件をルールとして表現せよ．
+\item[課題5-6] ユーザが自然言語の命令文によってブロックを操作したり，初期状態/目標状態を変更したりできるようにせよ．
+なお，命令文の動詞や語尾を1つの表現に決め打ちするのではなく，多様な表現を許容できることが望ましい．
+\item[課題5-7] 3次元空間の物理的な挙動を考慮したブロックワールドにおけるプランニングを実現せよ．
+なお，物理エンジン等を利用する場合，Java以外の言語のフレームワークを使って実現しても構わない．
+\item[課題5-8] 教科書3.3節のプランニング手法を応用できそうなブロック操作以外のタスクをグループで話し合い，新たなプランニング課題を自由に設定せよ．
+さらに，もし可能であれば，その自己設定課題を解くプランニングシステムを実装せよ．
+\end{description}
+
+
+\section{課題5-1}
+\begin{screen}
+　目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
+また，もしあったならその箇所を修正し、どのように修正したか記せ．
+\end{screen}
+
+\subsection{動作が不正な目標集合}
+動作が正しくない目標集合をソースコード\ref{lst:wrongGoal}に示す．
+  \begin{lstlisting}[caption=Planner.java(一部抜粋),label=lst:wrongGoal]
+private Vector<String> initGoalList() {
+  Vector<String> goalList = new Vector<String>();
+  goalList.addElement("A on B");
+  goalList.addElement("B on C");
+  return goalList;
+}
+  \end{lstlisting}
+  
+これは，正常に動作する元々の目標集合から，二状態の順番を入れ替えただけのものであるが，この目標集合でプログラムを実行した場合，ソースコード\ref{lst:wrongPlan}のような実行結果が得られる．
+\newpage
+\begin{lstlisting}[caption=実行例(抜粋),label=lst:wrongPlan]
+***** This is a plan! *****
+pick up A from the table
+Place A on A
+remove A from on top A
+Place A on B
+remove A from on top B
+put A down on the table
+pick up B from the table
+Place B on C
+\end{lstlisting}
+
+3行目においてAをAの上に置くという実行不可能なプランを示しているうえ，その後AをBの上に乗せ降ろしし，BをCの上に乗せたところで動作が停止する．
+
+\subsection{Operatorの修正}
+\label{sec:1Operator}
+プログラムの実行後にplanを出力するようにすると，ソースコード\ref{lst:plan}のような出力が得られた．
+\begin{lstlisting}[caption=実行例(抜粋),label=lst:plan]
+NAME: pick up A from the table
+IF :[handEmpty]
+ADD:[holding A]
+DELETE:[ontable A, clear A, handEmpty]
+\end{lstlisting}
+
+本来，``pick up A from the Table''のルールは，if節に``ontable A'', ``clear A'', ``handEmpty''の3つのアサーションを持っているはずであるが，ソースコード\ref{lst:plan}においては``handEmpty''の1アサーションしか持っていない．これは，Operatorクラスの各Vectorのゲッタがシャローコピーを返しているために起こっている．そのため，ディープコピーを返すように修正した．
+
+\subsection{testPlanメソッドの導入}
+\label{sec:1Test}
+planningメソッドで得られたplanを用いて，初期状態から目標状態にたどり着けるかどうかを確認するtestPlanメソッドを導入した．このメソッドで初期状態からプランを実行していき，実行不可能なプランにたどり着いたらその時点での状態を初期状態とし，新たにplanningメソッドを呼び出すようにした．
+
+\subsection{考察}
+\ref{sec:1Operator}節で示したOperatorの修正や，\ref{sec:1Test}節で示したtestPlanメソッドの導入を行ったが，課題の根本的な解決には至らなかった．とくに後者に関しては，無限ループを形成したり，そもそもplanningメソッドを何回も呼び出すため，実行時間がかかりすぎるという問題点があるため，最終的には用いることはなかった．具体的な解決法に関してはグループレポートを参照されたい．
+\end{document}
