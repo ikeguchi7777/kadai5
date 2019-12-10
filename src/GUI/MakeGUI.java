@@ -71,7 +71,7 @@ public class MakeGUI {
         }
         // bottom of Control button
 
-        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY()+100);
+        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY()+120);
         // Set panel position
 
         frame.getContentPane().add(panelCtrl,BorderLayout.PAGE_START);
