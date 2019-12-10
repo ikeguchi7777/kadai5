@@ -19,7 +19,6 @@ public class GraphicShape {
     private int row;
     private int col;
     public static HashMap<String, Color> colorMap = new HashMap<>();
-    public static HashMap<String, GraphicShape> shapeMap = new HashMap<>();
 
     static {
         colorMap.put("black", Color.BLACK);
@@ -61,6 +60,7 @@ public class GraphicShape {
         setPoint(-1, -1);
     }
 
+    // top of setters and getters
     public void setPoint(int row, int col) {
         this.row = row;
         this.col = col;
@@ -93,6 +93,7 @@ public class GraphicShape {
     public void setShape(String shape) {
         this.shape = shape;
     }
+    // bottom of setters and getters
 
     /**
      * parse initial states
@@ -107,9 +108,11 @@ public class GraphicShape {
      * </p>
      * 
      * @param initInitialState
+     * @param shapeMap
      * @return vector contain GraphicShapes from initial states
      */
-    public static Vector<GraphicShape> parseState(Vector<String> initInitialState) {
+    public static Vector<GraphicShape> parseState(Vector<String> initInitialState,
+            HashMap<String, GraphicShape> shapeMap) {
         Vector<GraphicShape> shapes = new Vector<>();
         for (String string : initInitialState) {
             Hashtable<String, String> var = new Hashtable<>();

@@ -1,10 +1,12 @@
 package GUI;
 
-import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -21,6 +23,7 @@ public class MakeGUI {
     public static void MakePlannerGUI() {
         // Draw Space
         DrawCanvas panelDraw = new DrawCanvas();
+        panelDraw.setBackground(Color.WHITE);
         Vector<String> initState = panelDraw.initState();
         Vector<String> goalList = panelDraw.goalList();
         panelDraw.init(new Vector<>(initState), new Vector<>(goalList));
@@ -56,6 +59,8 @@ public class MakeGUI {
             }
         };
         JPanel panelCtrl = new JPanel();
+        panelCtrl.setLayout(new FlowLayout());
+        panelCtrl.setPreferredSize(new Dimension(300,50));
 
         String btnName[] = { "Next Step", "Skip ALL", "Exit", "Reset" };
         for (int i = 0; i < btnName.length; i++) {
@@ -66,13 +71,12 @@ public class MakeGUI {
         }
         // bottom of Control button
 
-        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY());
+        FrameBase frame = new FrameBase("Planner", panelDraw.sizeX(), panelDraw.sizeY()+100);
         // Set panel position
-        Container contentPane = frame.getContentPane();
-        contentPane.add(panelCtrl, BorderLayout.NORTH);
-        contentPane.add(stateLabel, BorderLayout.SOUTH);
-        contentPane.add(panelDraw, BorderLayout.CENTER);
 
+        frame.getContentPane().add(panelCtrl,BorderLayout.PAGE_START);
+        frame.getContentPane().add(panelDraw, BorderLayout.CENTER);
+        frame.getContentPane().add(stateLabel, BorderLayout.PAGE_END);
         frame.setVisible(true);
     }
 

@@ -109,6 +109,7 @@ public class Planner {
 		//	initialState = testPlan(plan, theBinding);
 		//} while (!initialState.containsAll(goalList));
 
+		/*
 		System.out.println("***** This is a plan! *****");
 		for (int i = 0; i < plan.size(); i++) {
 			Operator op = plan.elementAt(i);
@@ -118,6 +119,7 @@ public class Planner {
 		System.out.println("state: " + initialState);
 		System.out.println("plan: " + plan);
 		System.out.println("binding: " + theBinding);
+		*/
 
 		return plan;
 	}
@@ -136,7 +138,7 @@ public class Planner {
 			Vector<String> theCurrentState,
 			Hashtable<String, String> theBinding,
 			Vector<String> theBlockList) {
-		System.out.println("*** GOALS ***" + theGoalList);
+		//System.out.println("*** GOALS ***" + theGoalList);
 		if (theGoalList.size() == 1) {
 			String aGoal = theGoalList.elementAt(0);
 			if (planningAGoal(aGoal, theCurrentState, theBinding, 0, theBlockList) != -1) {
@@ -165,7 +167,7 @@ public class Planner {
 				//System.out.println("tmpPoint: "+tmpPoint);
 				if (tmpPoint != -1) {
 					theGoalList.removeElementAt(0);
-					System.out.println(theCurrentState);
+					//System.out.println(theCurrentState);
 					if (planning(theGoalList, theCurrentState, theBinding, theBlockList)) {
 						//System.out.println("Success !");
 						return true;
@@ -211,7 +213,7 @@ public class Planner {
 
 	private int planningAGoal(String theGoal, Vector<String> theCurrentState,
 			Hashtable<String, String> theBinding, int cPoint, Vector<String> theBlockList) {
-		System.out.println("**" + theGoal);
+		//System.out.println("**" + theGoal);
 		int size = theCurrentState.size();
 		for (int i = 0; i < size; i++) {
 			String aState = theCurrentState.elementAt(i);
@@ -271,11 +273,11 @@ public class Planner {
 					Vector<String> addblocks = getBlockList(newGoals);
 					theBlockList.addAll(addblocks);
 					//theBlockList.addAll(newOperator.getBlockList());
-					System.out.println(newOperator.name);
+					//System.out.println(newOperator.name);
 					//operators.get(i).setPriority(anOperator.getPriority() + 1);
 					if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
 						newOperator = newOperator.instantiate(theBinding);
-						System.out.println(newOperator.name);
+						//System.out.println(newOperator.name);
 						plan.addElement(newOperator);
 						theCurrentState = newOperator.applyState(theCurrentState);
 						//operators.get(i).setPriority(anOperator.getPriority() + 1);
@@ -303,9 +305,9 @@ public class Planner {
 					}
 				}
 			}
-			System.out.println("次のOPへ:" + theGoal);
+			//System.out.println("次のOPへ:" + theGoal);
 		}
-		System.out.println("失敗:" + theGoal);
+		//System.out.println("失敗:" + theGoal);
 		return -1;
 	}
 

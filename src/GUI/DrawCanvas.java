@@ -8,7 +8,9 @@ import kadai5.Shape;
 import kadai5.Unifier;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.Vector;
@@ -34,6 +36,7 @@ public class DrawCanvas extends JPanel {
      * 一番上はholding用 board[row][col]
      */
     private GraphicShape[][] board;
+    HashMap<String, GraphicShape> shapeMap;
 
     /**
      * CanvasWidth
@@ -46,7 +49,7 @@ public class DrawCanvas extends JPanel {
      * CanvasHeight
      */
     public int sizeY() {
-        return 100 + (boxNum + 1) * (rectSize) + margin * 2;
+        return margin + (boxNum + 1) * (rectSize) + margin;
     }
 
     public String getState() {
@@ -81,11 +84,18 @@ public class DrawCanvas extends JPanel {
 
     /**
      * 初期状態の設定後、GraphicShapeの一覧を作成。 boardに格納しつつshapeMapに登録、さらに自身に座標を記憶させる。
-     * boardの初期化が終わったら、目標状態の設定に移る。
+     * boardの初期化が終わったら、目標状態から手順をPlannerで作成する。
+     * 
+     * @param initState 初期状態
+     * @param goalList  目標状態
      */
-    public void init(Vector<String> initState,Vector<String> goalList) {
-        Vector<GraphicShape> shapes = GraphicShape.parseState(initState);
+    public void init(Vector<String> initState, Vector<String> goalList) {
+        shapeMap = new HashMap<>();
+        Vector<GraphicShape> shapes = GraphicShape.parseState(initState, shapeMap);
         boxNum = shapes.size();
+        if (boxNum == 0||goalList.isEmpty()) {
+            System.out.println("fail to load:(");
+        }
         board = new GraphicShape[boxNum + 1][boxNum];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
@@ -100,6 +110,7 @@ public class DrawCanvas extends JPanel {
         holding = 0;
         index = 0;
         state = "board was initialized!";
+        setPreferredSize(new Dimension(sizeX(), sizeY()));
         repaint();
         System.out.println("board was initialized!");
         Planner plan = new Planner();
@@ -148,17 +159,17 @@ public class DrawCanvas extends JPanel {
             var = new Hashtable<>();
             oparated = true;
             if ((new Unifier()).unify("Place ?x on ?y", oparation, var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
-                GraphicShape gs2 = GraphicShape.shapeMap.get(var.get("?y"));
+                GraphicShape gs1 = shapeMap.get(var.get("?x"));
+                GraphicShape gs2 = shapeMap.get(var.get("?y"));
                 drop(gs1, gs2);
             } else if ((new Unifier()).unify("remove ?x from on top ?y", oparation, var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                GraphicShape gs1 = shapeMap.get(var.get("?x"));
                 pickUp(gs1);
             } else if ((new Unifier()).unify("pick up ?x from the table", oparation, var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                GraphicShape gs1 = shapeMap.get(var.get("?x"));
                 pickUp(gs1);
             } else if ((new Unifier()).unify("put ?x down on the table", oparation, var)) {
-                GraphicShape gs1 = GraphicShape.shapeMap.get(var.get("?x"));
+                GraphicShape gs1 = shapeMap.get(var.get("?x"));
                 drop(gs1, null);
             } else {
                 // skip no oparation
