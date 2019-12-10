@@ -1,4 +1,4 @@
-package kadai5;
+//package kadai5;
 
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -9,6 +9,7 @@ public class Operator {
 	Vector<String> ifList;
 	Vector<String> addList;
 	Vector<String> deleteList;
+	Vector<String> blockList;
 	int priority;
 
 	Operator(String theName,
@@ -18,22 +19,41 @@ public class Operator {
 		addList = theAddList;
 		deleteList = theDeleteList;
 		priority = thePriority;
+		blockList=new Vector<>();
+	}
+
+	Operator(String theName,
+			Vector<String> theIfList, Vector<String> theAddList, Vector<String> theDeleteList,int thePriority,Vector<String> theBlockList) {
+		name = theName;
+		ifList = theIfList;
+		addList = theAddList;
+		deleteList = theDeleteList;
+		priority = thePriority;
+		blockList=theBlockList;
 	}
 
 	public Vector<String> getAddList() {
-		return addList;
+		return new Vector<>(addList);
 	}
 
 	public Vector<String> getDeleteList() {
-		return deleteList;
+		return new Vector<>(deleteList);
 	}
 
 	public Vector<String> getIfList() {
-		return ifList;
+		return new Vector<>(ifList);
+	}
+
+	public Vector<String> getBlockList(){
+		return new Vector<>(blockList);
 	}
 
 	public int getPriority(){
 		return priority;
+	}
+
+	public void setPriority(int p) {
+		priority=p;
 	}
 
 	public String toString() {
@@ -100,7 +120,7 @@ public class Operator {
 		//新しいpriorityを作る
 		//int newPriority = Integer.valueOf(renameVars(String.valueOf(priority), renamedVarsTable));
 
-		return new Operator(newName, newIfList, newAddList, newDeleteList, priority);
+		return new Operator(newName, newIfList, newAddList, newDeleteList, priority,blockList);
 	}
 
 	private Vector<String> getVars(String thePattern, Vector<String> vars) {
@@ -160,7 +180,7 @@ public class Operator {
 			String newDelete = instantiateString(deleteList.elementAt(i), theBinding);
 			newDeleteList.addElement(newDelete);
 		}
-		return new Operator(newName, newIfList, newAddList, newDeleteList, priority);
+		return new Operator(newName, newIfList, newAddList, newDeleteList, priority,blockList);
 	}
 
 	private String instantiateString(String thePattern, Hashtable<String,String> theBinding) {
