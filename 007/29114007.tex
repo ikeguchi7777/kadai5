@@ -1,0 +1,397 @@
+\documentclass{jarticle}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題5}
+\author{グループ07\\
+  29114007 池口　弘尚\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年12月2日}
+
+\begin{document}
+\maketitle
+
+\paragraph{提出物} rep5
+\paragraph{グループ} グループ07
+\paragraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline
+  学生番号&氏名&貢献度比率\\
+  \hline\hline
+  29114007&池口弘尚&\\
+  \hline
+  29114031&大原拓人&\\
+  \hline
+  29114048&北原太一&\\
+  \hline
+  29114086&飛世裕貴&\\
+  \hline
+  29114095&野竹浩二朗&\\
+\end{tabular}
+
+\section{課題の説明}
+\begin{description}
+\item[課題5-1] 目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
+また，もしあったならその箇所を修正し，どのように修正したか記せ．
+\item[課題5-2] 教科書のプログラムでは，オペレータ間の競合解消戦略としてランダムなオペレータ選択を採用している．
+これを，効果的な競合解消戦略に改良すべく考察し，実装せよ．
+改良の結果，性能がどの程度向上したかを定量的に（つまり数字で）示すこと．
+\item[課題5-3] 上記のプランニングのプログラムでは，ブロックの属性（たとえば色や形など）を考えていないので，色や形などの属性を扱えるようにせよ．ルールとして表現すること．
+例えば色と形の両方を扱えるようにする場合，Aが青い三角形，Bが黄色の四角形，Cが緑の台形であったとする．
+その時，色と形を使ってもゴールを指定できるようにする（"green on blue" や"blue on box"のように）
+\item[課題5-4]上記5-2, 5-3で改良したプランニングシステムのGUIを実装せよ．
+ブロック操作の過程をグラフィカルに可視化し，初期状態や目標状態をGUI上で変更できることが望ましい．
+\end{description}
+私は課題5-1，課題5-3を担当した．
+
+\section{課題5-1}
+\begin{screen}
+目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
+また，もしあったならその箇所を修正し，どのように修正したか記せ．
+\end{screen}
+
+私は，オペレータが繰り返し使われるのを防ぐためのフィルタを追加することによって，ループが発生することに対する対処を担当した．
+
+\subsection{動作例}
+"A remove from on top B"と"Place A on B"という操作は打ち消し合ってしまうため，これが永遠と続くとオーバーフローしてしまう．
+これを解決するために，特定のオペレータが続かないようにフィルターをかけた．
+
+また，"Place A on B"を実行するとなると"clear B"と"holding A"を満たさなければならなくなり，それを満たすために"Place A on B"を使割れてしまい，ループに陥ってしまった．
+これを解決するため，試行するオペレータを保持しておいて，それ以降のオペレータと比較して同じものをフィルタリングした．
+\subsection{実装}
+"Place ?x on ?y"の後には"remove ?x from on top ?y"が来ることは絶対にないので，それらをメンバー変数として保持しておいて，次のオペレータから除くという方法でループが起こらないようにした．実装は，planningAGoalの一部を変更して，以下のように実装した．
+
+\begin{lstlisting}[caption=特定のオペレータが続かないようにする,label=src:blockNext]
+private int planningAGoal(String theGoal, Vector<String> theCurrentState,
+    // 略
+    // 1つ前のblockNextを記憶しておく
+    Vector<String> theBlockNext = blockNext;
+    
+    loop: for (int i = cPoint; i < operators.size(); i++) {
+        for (String dontnext : blockNext) {
+            // blockNextに入っているオペレータはスキップ
+            if (operators.elementAt(i).name.equals(dontnext))
+                continue loop;
+        }
+        // 略
+        for (int j = 0; j < addList.size(); j++) {
+            if ((new Unifier()).unify(theGoal,
+                addList.elementAt(j),
+                    theBinding)) {
+                Operator newOperator = anOperator.instantiate(theBinding);
+                //次のオペレータが決定したらblockNextを更新する
+                blockNext = anOperator.getBlockList();
+                // 略
+                // その後のプランニングが成功したとき
+                if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
+                    // 略
+                    // blockNextは空にする
+                    blockNext.removeAllElements();
+                    return i + 1;
+                }
+                // 失敗したとき
+                else {
+                    // 略
+                    // blockNextを以前の状態に復元する．
+                    blockNext = theBlockNext;
+                }
+            }
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+まずiが決まったすぐあとに，それに対応するオペレータがblockNextに含まれていないか確認して，含まれていれば次のループに移行するようになっている．
+その後，オペレータが定まったら，そのオペレータが持っているブロックリストを利用してblockNextを更新する．
+プランが成功するとblockNextを空にして，失敗すると元の状態に戻す．
+\newline
+
+また，"Place A on B"をもとに新たなゴールが設定されたときに，それを達成するために"Place A on B"を行うことはないため，それらも別に保持しておいて，フィルターとして活用した．
+
+\begin{lstlisting}[caption=変数まで同じオペレータが呼ばれないようにする,label=src:blockList]
+private int planningAGoal(String theGoal, Vector<String> theCurrentState,
+        Hashtable<String, String> theBinding, int cPoint, Vector<String> theBlockList) {
+    // 略
+    loop: for (int i = cPoint; i < operators.size(); i++) {
+        // 略
+        for (int j = 0; j < addList.size(); j++) {
+            if ((new Unifier()).unify(theGoal,
+                    addList.elementAt(j),
+                    theBinding)) {
+                Operator newOperator = anOperator.instantiate(theBinding);
+                for (String block : theBlockList) {
+                    // ブロックリストと一致すれば次のオペレータへ
+                    if ((new Unifier()).unify(newOperator.name, block, theBinding))
+                        continue loop;
+                }
+                Vector<String> newGoals = newOperator.getIfList();
+                // IFListから#がついたリストを分離
+                Vector<String> addblocks = getBlockList(newGoals);
+                // theBlockListに追加する．
+                theBlockList.addAll(addblocks);
+                // 略
+                if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
+                    // 略
+                    // 元に戻す
+                    theBlockList.removeAll(addblocks);
+                    return i + 1;
+                }
+                else {
+                    // 略
+                    // 元に戻す
+                    theBlockList.removeAll(addblocks);
+                }
+            }
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+\subsection{考察}
+上記の実装を行う前は，競合してしまっているオペレータが無限にお互いを呼び出し合ってオーバーフローを起こしてしまうことがあったが，上記のように実装することによって，そのようなことを防ぐことができるようになった．
+ただ，blockNextは単なる比較だが，Unifierではバインディングをしてしまっているので，バインディングリストをもとに戻す必要があると考えられる．
+しかし，今回の実装では前後関係上もとに戻すようなことができなかったので，Unifier上で値を具体化せずに比較できるようなメソッドを作成した方が良いと思われる．
+
+\section{課題5-3}
+\begin{screen}
+上記のプランニングのプログラムでは，ブロックの属性（たとえば色や形など）を考えていないので，色や形などの属性を扱えるようにせよ．ルールとして表現すること．
+\end{screen}
+\subsection{手法}
+オペレータに色や形から，AやBなどといった名前に変換するものを追加することによって，同一のルール上で動くようにしている．
+
+\subsection{実装}
+オペレータに色や形を扱うものを追加した．
+\begin{lstlisting}[caption=色や形を扱うオペレータ,label=src:operator]
+private void initOperators() {
+    operators = new Vector<Operator>();
+    // 略
+    // OPERATOR 5
+    /// NAME:?yの名前は?x
+    String name5 = "?x is name of ?y";
+    /// IF
+    Vector<String> ifList5 = new Vector<>();
+    ifList5.addElement("#?x is name of ?y");
+    ifList5.addElement("?x has a characteristic of ?y");
+    ifList5.addElement("?x is name");
+    /// ADD-LIST
+    Vector<String> addList5 = new Vector<>();
+    addList5.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList5 = new Vector<>();
+    deleteList5.addElement("?x on ?z");
+    /// BLOCK-LIST
+    Vector<String> blockList5 = new Vector<>();
+    blockList5.addElement("?x is name of ?y");
+    blockList5.addElement("?z is a characteristic of ?x");
+    /// PRIORITY
+    int priority5 = 5;
+    operators.addElement(new Operator(name5, ifList5, addList5, deleteList5, priority5, blockList5));
+    
+    // OPERATOR 6
+    /// NAME:?yの名前は?x
+    String name6 = "?x is name of ?z";
+    /// IF
+    Vector<String> ifList6 = new Vector<>();
+    ifList6.addElement("#?x is name of ?z");
+    ifList6.addElement("?x has a characteristic of ?z");
+    ifList6.addElement("?x is name");
+    ifList6.addElement("?y on ?x");
+    /// ADD-LIST
+    Vector<String> addList6 = new Vector<>();
+    addList6.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList6 = new Vector<>();
+    deleteList6.addElement("?y on ?x");
+    /// BLOCK-LIST
+    Vector<String> blockList6 = new Vector<>();
+    blockList6.addElement("?x is name of ?z");
+    blockList6.addElement("?y is a characteristic of ?x");
+    /// PRIORITY
+    int priority6 = 5;
+    operators.addElement(new Operator(name6, ifList6, addList6, deleteList6, priority6, blockList6));
+    
+    // OPERATOR 7
+    /// NAME:?yの特徴は?x
+    String name7 = "?y is a characteristic of ?x";
+    /// IF
+    Vector<String> ifList7 = new Vector<>();
+    ifList7.addElement("#?y is a characteristic of ?x");
+    ifList7.addElement("?x has a characteristic of ?y");
+    ifList7.addElement("?x is name");
+    ifList7.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList7 = new Vector<>();
+    addList7.addElement("?z on ?x");
+    /// DELETE-LIST
+    Vector<String> deleteList7 = new Vector<>();
+    deleteList7.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList7 = new Vector<>();
+    blockList7.addElement("?y is a characteristic of ?x");
+    blockList7.addElement("?x is name of ?z");
+    /// PRIORITY
+    int priority7 = 10;
+    operators.addElement(new Operator(name7, ifList7, addList7, deleteList7, priority7, blockList7));
+    
+    // OPERATOR 8
+    /// NAME:?yの特徴は?x
+    String name8 = "?z is a characteristic of ?x";
+    /// IF
+    Vector<String> ifList8 = new Vector<>();
+    ifList8.addElement("#?z is a characteristic of ?x");
+    ifList8.addElement("?x has a characteristic of ?z");
+    ifList8.addElement("?x is name");
+    ifList8.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList8 = new Vector<>();
+    addList8.addElement("?x on ?y");
+    /// DELETE-LIST
+    Vector<String> deleteList8 = new Vector<>();
+    deleteList8.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList8 = new Vector<>();
+    blockList8.addElement("?z is a characteristic of ?x");
+    blockList8.addElement("?x is name of ?y");
+    /// PRIORITY
+    int priority8 = 10;
+    operators.addElement(new Operator(name8, ifList8, addList8, deleteList8, priority8, blockList8));
+    
+    // OPERATOR 9
+    /// NAME:?yの名前は?x
+    String name9 = "?x is shape of ?y";
+    /// IF
+    Vector<String> ifList9 = new Vector<>();
+    ifList9.addElement("#?x is shape of ?y");
+    ifList9.addElement("?x has shape of ?y");
+    ifList9.addElement("?x is name");
+    ifList9.addElement("?x on ?z");
+    /// ADD-LIST
+    Vector<String> addList9 = new Vector<>();
+    addList9.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList9 = new Vector<>();
+    deleteList9.addElement("?x on ?z");
+    /// BLOCK-LIST
+    Vector<String> blockList9 = new Vector<>();
+    blockList9.addElement("?x is shape of ?y");
+    blockList9.addElement("?z is a shape of ?x");
+    /// PRIORITY
+    int priority9 = 9;
+    operators.addElement(new Operator(name9, ifList9, addList9, deleteList9, priority9, blockList9));
+    
+    // OPERATOR 10
+    /// NAME:?yの名前は?x
+    String name10 = "?x is shape of ?z";
+    /// IF
+    Vector<String> ifList10 = new Vector<>();
+    ifList10.addElement("#?x is shape of ?z");
+    ifList10.addElement("?x has shape of ?z");
+    ifList10.addElement("?x is name");
+    ifList10.addElement("?y on ?x");
+    /// ADD-LIST
+    Vector<String> addList10 = new Vector<>();
+    addList10.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList10 = new Vector<>();
+    deleteList10.addElement("?y on ?x");
+    /// BLOCK-LIST
+    Vector<String> blockList10 = new Vector<>();
+    blockList10.addElement("?x is shape of ?z");
+    blockList10.addElement("?y is a shape of ?x");
+    /// PRIORITY
+    int priority10 = 9;
+    operators.addElement(new Operator(name10, ifList10, addList10, deleteList10, priority10, blockList10));
+    
+    // OPERATOR 11
+    /// NAME:?yの形は?x
+    String name11 = "?y is a shape of ?x";
+    /// IF
+    Vector<String> ifList11 = new Vector<>();
+    ifList11.addElement("#?y is a shape of ?x");
+    ifList11.addElement("?x has shape of ?y");
+    ifList11.addElement("?x is name");
+    ifList11.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList11 = new Vector<>();
+    addList11.addElement("?z on ?x");
+    /// DELETE-LIST
+    Vector<String> deleteList11 = new Vector<>();
+    deleteList11.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList11 = new Vector<>();
+    blockList11.addElement("?y is a shape of ?x");
+    blockList11.addElement("?x is shape of ?z");
+    /// PRIORITY
+    int priority11 = 10;
+    operators.addElement(new Operator(name11, ifList11, addList11, deleteList11, priority11, blockList11));
+    
+    // OPERATOR 12
+    /// NAME:?yの形は?x
+    String name12 = "?z is a shape of ?x";
+    /// IF
+    Vector<String> ifList12 = new Vector<>();
+    ifList12.addElement("#?z is a shape of ?x");
+    ifList12.addElement("?x has shape of ?z");
+    ifList12.addElement("?x is name");
+    ifList12.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList12 = new Vector<>();
+    addList12.addElement("?x on ?y");
+    /// DELETE-LIST
+    Vector<String> deleteList12 = new Vector<>();
+    deleteList12.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList12 = new Vector<>();
+    blockList12.addElement("?z is a shape of ?x");
+    blockList12.addElement("?x is shape of ?y");
+    /// PRIORITY
+    int priority12 = 10;
+    operators.addElement(new Operator(name12, ifList12, addList12, deleteList12, priority12, blockList12));
+}
+\end{lstlisting}
+
+#が先頭についているものはblockListに入る．
+
+\subsection{考察}
+Unifierがバインディングすると，候補が見つかった時点でそれをバインディングリストに入れて，探索が終了してしまう．
+そのため，色や形で別のオペレータを作る必要ができてしまい，結果としてオペレータが増えすぎて，ステップ数が増えてしまったように思われる．
+
+対策としては，具体化すべき部分は具体化して，その場で具体化しなくていいようなものは具体化しないことによって，オペレータの数を減らせるのではないかと考える．
+例えば"A has a characteristic of ?y"のyの部分をすぐには具体化しないことによって，shapeもcharacteristicとして扱うことができるかもしれない．
+そのためには，やはり具体化を行わないUnifierが必要になると思われる．
+
+\section{感想}
+色や形をルールに組み込むのにかなり時間がかかってしまった．
+オペレータの数が増えたことによって，様々な問題が発生してしまい，それを解決するための方法を模索するのに時間を費やしてしまった．
+そのため，ほかに実装しておきたいことがあまり実装できていないため，work6でそのようなことをまとめて実装したい．
+
+
+\end{document}
