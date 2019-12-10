@@ -95,33 +95,33 @@
 \end{itemize}
 また，PlannerクラスのinitOperatorsメソッドも変更した．以下に例を示す．
 \begin{lstlisting}
-		// OPERATOR 1
-		/// NAME
-		String name1 = new String("Place ?x on ?y");
-		/// IF
-		Vector<String> ifList1 = new Vector<String>();
-		ifList1.addElement("#Place ?x on ?y");
-		ifList1.addElement("?x is name");
-		ifList1.addElement("?y is name");
-		ifList1.addElement(new String("clear ?y"));
-		ifList1.addElement(new String("holding ?x"));
-		/// ADD-LIST
-		Vector<String> addList1 = new Vector<String>();
-		addList1.addElement(new String("?x on ?y"));
-		addList1.addElement(new String("clear ?x"));
-		addList1.addElement(new String("handEmpty"));
-		/// DELETE-LIST
-		Vector<String> deleteList1 = new Vector<String>();
-		deleteList1.addElement(new String("clear ?y"));
-		deleteList1.addElement(new String("holding ?x"));
-		/// BLOCK-LIST
-		Vector<String> blockList1 = new Vector<>();
-		blockList1.addElement("remove ?x from on top ?y");
-		blockList1.addElement("Place ?x on ?y");
-		// PRIORITY
-		int priority1 = 2;
-		Operator operator1 = new Operator(name1, ifList1, addList1, deleteList1, priority1, blockList1);
-		operators.addElement(operator1);
+// OPERATOR 1
+/// NAME
+String name1 = new String("Place ?x on ?y");
+/// IF
+Vector<String> ifList1 = new Vector<String>();
+ifList1.addElement("#Place ?x on ?y");
+ifList1.addElement("?x is name");
+ifList1.addElement("?y is name");
+ifList1.addElement(new String("clear ?y"));
+ifList1.addElement(new String("holding ?x"));
+/// ADD-LIST
+Vector<String> addList1 = new Vector<String>();
+addList1.addElement(new String("?x on ?y"));
+addList1.addElement(new String("clear ?x"));
+addList1.addElement(new String("handEmpty"));
+/// DELETE-LIST
+Vector<String> deleteList1 = new Vector<String>();
+deleteList1.addElement(new String("clear ?y"));
+deleteList1.addElement(new String("holding ?x"));
+/// BLOCK-LIST
+Vector<String> blockList1 = new Vector<>();
+blockList1.addElement("remove ?x from on top ?y");
+blockList1.addElement("Place ?x on ?y");
+// PRIORITY
+int priority1 = 2;
+Operator operator1 = new Operator(name1, ifList1, addList1, deleteList1, priority1, blockList1);
+operators.addElement(operator1);
 \end{lstlisting}
 これはyの上にxを置くというオペレータだが，最後に優先度を表すpriority1を設定している．\\
 ランダムでオペレータを決定した場合と優先度をつけてオペレータを決定する場合とでどの程度効率に差が出たかを示すため，メインメソッドを以下のように変更し，ミリ秒単位でどれだけ時間がかかったかを出力した．\\
@@ -136,6 +136,7 @@ public static void main(String argv[]) {
 \end{lstlisting}
 今回，オペレータに以下のように優先度を割り振った．\\
 \begin{table}[H]
+\caption{割り振った優先度}
 \begin{center}
 \begin{tabular}{|l|c|}
 \hline
@@ -146,13 +147,13 @@ pick up ?x from the table & 1 \\ \hline
 put ?x down on the table & 4 \\ \hline
 \end{tabular}
 \end{center}
-\caption{割り振った優先度}
 \end{table}
 この優先度は，「まずテーブルの上のものを持ち他のものに置く」という基本の動作を優先的に行うために値を割り振った．
 \section{実行結果}
 出力された結果すべてを載せると長くなってしまうため，ループの回数のみを示す．\\
 まず，初期のランダムで次のオペレータを選択する場合を20回分行った結果を示す．\\
 \begin{table}[H]
+\caption{aaa}
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -162,11 +163,11 @@ put ?x down on the table & 4 \\ \hline
 27828   & 496 & 34022   & 516  & 1621 \\ \hline
 \end{tabular}
 \end{center}
-\caption{かかった時間(ミリ秒)}
 \end{table}
 このような結果になる．平均約13480ミリ秒となった．\\
 優先度をつけた場合の結果を以下に示す．
 \begin{table}[H]
+\caption{かかった時間(ミリ秒)}
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -176,7 +177,6 @@ put ?x down on the table & 4 \\ \hline
 1132   & 1048 & 884  & 1056  & 1148 \\ \hline
 \end{tabular}
 \end{center}
-\caption{かかった時間(ミリ秒)}
 \end{table}
 こちらの平均は約1103ミリ秒となる．
 ランダムで選択した場合，約400ミリ秒という短い時間で終了する場合もあるが，極端に時間がかかってしまう場合もある．一方，優先度をつけた場合は，約1000ミリ秒前後のループとなってしまうが，安定してある程度の速さで結果を求めることができる．
