@@ -22,30 +22,14 @@ public class Planner {
 		rand = new Random();
 	}
 
-	private Vector<String> testPlan(Vector<Operator> thePlan, Hashtable<String, String> theBinding) {
-		Vector<String> theState = initInitialState();
-		Vector<Operator> newPlan = new Vector<>();
-		for (Operator operator : thePlan) {
-			Operator instOp = operator.instantiate(theBinding);
-			if (theState.containsAll(instOp.ifList)) {
-				newPlan.add(operator);
-				instOp.applyState(theState);
-			} else {
-				break;
-			}
-		}
-		thePlan = newPlan;
-		return theState;
-	}
-
 	public void start() {
 		blockNext.removeAllElements();
 		initOperators();
 		Vector<String> goalList = initGoalList();
 		Vector<String> initialState = initInitialState();
-		
+
 		sortGoalList(goalList, initialState);
-		
+
 		Vector<String> blockList = initBlockList(initialState);
 		GoalList = new Vector<>(goalList);
 		Hashtable<String, String> theBinding = new Hashtable<String, String>();
@@ -341,6 +325,11 @@ public class Planner {
 		return goalList;
 	}
 
+	/**
+	 * goalListを効率のいいようにソート
+	 * @param goalList ソートすべきgoalList
+	 * @param states 特徴と名前を関連付ける状態
+	 */
 	private void sortGoalList(Vector<String> goalList, final Vector<String> states) {
 		Hashtable<String, Integer> sort = new Hashtable<>();
 		Hashtable<String, Integer> directPriority = new Hashtable<>();
@@ -362,7 +351,7 @@ public class Planner {
 						indirectPriority.add(new String[]{name, name2});
 			}
 		}
-		
+
 		for (String[] strings : indirectPriority) {
 			if (directPriority.containsKey(strings[1])) {
 				try {
@@ -380,7 +369,7 @@ public class Planner {
 				}
 			}
 		}
-		
+
 		for (String goal : goalList) {
 			if (!sort.contains(goal)) {
 				sort.put(goal, goalList.size() * 2);
@@ -400,6 +389,12 @@ public class Planner {
 		});
 	}
 
+	/**
+	 * 特徴を名前にする
+	 * @param character 特徴あるいは名前
+	 * @param states 特徴と名前を関連付ける状態集合
+	 * @return characterが名前ならそれのみを含むVector, 特徴ならその特徴を含む名前の集合
+	 */
 	private Vector<String> getNamesByCharacter(final String character, final Vector<String> states) {
 		Vector<String> ret = new Vector<>();
 		if (states.contains(character + " is name")) {
