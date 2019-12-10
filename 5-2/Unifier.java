@@ -1,4 +1,4 @@
-package kadai5;
+//package kadai5;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -11,7 +11,7 @@ public class Unifier {
 	String buffer2[];
 	Hashtable<String, String> vars;
 
-	public Unifier() {
+	Unifier() {
 		//vars = new Hashtable();
 	}
 
@@ -90,8 +90,6 @@ public class Unifier {
 	}
 
 	boolean varMatching(String vartoken, String token) {
-		if(varAll(vartoken)||varAll(token))
-			return true;
 		if (vars.containsKey(vartoken)) {
 			if (token.equals(vars.get(vartoken))) {
 				return true;
@@ -132,11 +130,6 @@ public class Unifier {
 	boolean var(String str1) {
 		// 先頭が ? なら変数
 		return str1.startsWith("?");
-	}
-	
-	boolean varAll(String str) {
-		// ?*なら具体化しない
-		return var(str)&&str.charAt(1)=='*';
 	}
 
 }
