@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 public class Planner {
@@ -42,6 +43,9 @@ public class Planner {
 		initOperators();
 		Vector<String> goalList = initGoalList();
 		Vector<String> initialState = initInitialState();
+		
+		sortGoalList(goalList, initialState);
+		
 		Vector<String> blockList = initBlockList(initialState);
 		GoalList = new Vector<>(goalList);
 		Hashtable<String, String> theBinding = new Hashtable<String, String>();
@@ -336,6 +340,83 @@ public class Planner {
 
 		return goalList;
 	}
+
+	private void sortGoalList(Vector<String> goalList, final Vector<String> states) {
+		Hashtable<String, Integer> sort = new Hashtable<>();
+		Hashtable<String, Integer> directPriority = new Hashtable<>();
+		Vector<String[]> indirectPriority = new Vector<>();
+
+		for (String string : goalList) {
+			StringTokenizer parsedGoal = new StringTokenizer(string);
+			String token;
+			if ((token = parsedGoal.nextToken()).equals("ontable")) {
+				for (String name : getNamesByCharacter(token, states)) {
+					directPriority.put(name, 0);
+				}
+				sort.put(string, 0);
+			} else {
+				parsedGoal.nextToken();
+				String token2 = parsedGoal.nextToken();
+				for (String name : getNamesByCharacter(token, states))
+					for (String name2 : getNamesByCharacter(token2, states))
+						indirectPriority.add(new String[]{name, name2});
+			}
+		}
+		
+		for (String[] strings : indirectPriority) {
+			if (directPriority.containsKey(strings[1])) {
+				try {
+					directPriority.put(strings[0],
+							Math.min(directPriority.get(strings[0]), directPriority.get(strings[1]) + 1));
+				} catch (NullPointerException e) {
+					directPriority.put(strings[0], directPriority.get(strings[1]) + 1);
+				}
+			} else {
+				try {
+					directPriority.put(strings[1], directPriority.get(strings[0]) - 1);
+				} catch (NullPointerException e) {
+					directPriority.put(strings[1], goalList.size());
+					directPriority.put(strings[0], goalList.size() + 1);
+				}
+			}
+		}
+		
+		for (String goal : goalList) {
+			if (!sort.contains(goal)) {
+				sort.put(goal, goalList.size() * 2);
+				if (!goal.startsWith("ontable ")) {
+					for (String string : getNamesByCharacter(new StringTokenizer(goal).nextToken(), states)) {
+						sort.put(goal, directPriority.get(string));
+					}
+				}
+			}
+		}
+		goalList.sort(new Comparator<String>() {
+
+			@Override
+			public int compare(String o1, String o2) {
+				return sort.get(o1) - sort.get(o2);
+			}
+		});
+	}
+
+	private Vector<String> getNamesByCharacter(final String character, final Vector<String> states) {
+		Vector<String> ret = new Vector<>();
+		if (states.contains(character + " is name")) {
+			ret.add(character);
+			return ret;
+		}
+		for (String state : states) {
+			if (state.endsWith(" has a characteristic of " + character) || state.endsWith(" has shape of " + character)) {
+				String name = new StringTokenizer(state).nextToken();
+				if (!ret.contains(name))
+					ret.add(name);
+			}
+		}
+
+		return ret;
+	}
+
 
 	private Vector<String> initInitialState() {
 		Vector<String> initialState = new Vector<String>();
