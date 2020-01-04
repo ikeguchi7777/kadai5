@@ -1,0 +1,144 @@
+\documentclass[a4j]{jarticle}
+
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+\usepackage{here}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題6}
+\author{グループ07\\
+  29114095 野竹浩二朗\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年12月9日}
+
+\begin{document}
+\maketitle
+
+\paragraph{提出物} rep6
+\paragraph{グループ} グループ07
+\paragraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline\hline
+  学籍番号&名前&貢献度\\
+  \hline\hline
+  29114007&池口弘尚&\\
+  \hline
+  29114031&大原拓人&\\
+  \hline
+  29114048&北原太一&\\
+  \hline
+  29114086&飛世裕貴&\\
+  \hline
+  29114095&野竹浩二朗&\\
+  \hline
+\end{tabular}
+
+
+
+\section{課題の説明}
+\begin{description}
+\item[課題6-1] 課題5で実装したプランニングのプログラムの完成度を高めよ．課題5にやり残した発展課題があれば参考にして拡張しても良いし，全く新しい独自仕様を考案しても構わない．自由に拡張するか，あるいはもし残っていた問題点があれば完成度を高めよ．
+
+\end{description}
+私は前回担当したオペレータの選択をさらに効率よく選択できるようにした．
+\section{課題6-1}
+\begin{screen}
+課題5で実装したプランニングのプログラムの完成度を高めよ．課題5にやり残した発展課題があれば参考にして拡張しても良いし，全く新しい独自仕様を考案しても構わない．自由に拡張するか，あるいはもし残っていた問題点があれば完成度を高めよ．
+\end{screen}
+
+\subsection{手法}
+オペレータに優先度をずっと固定ではなく，その直前に選択したオペレータによってその都度優先度を振りなおす．
+
+\subsection{実装}
+優先度を振りなおせるようにするため，以下のメソッドをPlanner.javaに追加した．
+\begin{itemize}
+\item 直前のオペレータは何かを判別するjudgeName(Operator)
+\item 優先度を振りなおすresetPriority(int)
+\end{itemize}
+また，優先度をどう振ったか見やすくするため，配列priorityを作り，OPERATOR1から順に優先度を格納した．\\
+まず，judgeNameメソッドを以下に示す．
+\begin{lstlisting}
+public int judgeName(Operator op){
+	if((op.name).contains("Place")){
+		return 1;
+	}else if((op.name).contains("remove")){
+		return 2;
+	}else if((op.name).contains("pick")){
+		return 3;
+	}else if((op.name).contains("put")){
+		return 4;
+	}else{
+		return 0;
+	}
+}
+\end{lstlisting}
+オペレータの名前を取得し，含まれる単語でオペレータを判別している．initOperatorsではオペレータを12個生成しているが，実際に積み木を動かすオペレータは4個であるため，その4個のみを判定している．\\
+次にresetPriorityメソッドを以下に示す．
+\begin{lstlisting}
+void resetPriority(int judgeOperator){
+	if(judgeOperator == 1){
+		priority[0] = 7;
+		priority[1] = 7;
+		priority[2] = 2;
+		priority[3] = 1;
+	}else if(judgeOperator == 2){
+		priority[0] = 7;
+		priority[1] = 7;
+		priority[2] = 1;
+		priority[3] = 2;
+	}else if(judgeOperator == 3){
+		priority[0] = 2;
+		priority[1] = 2;
+		priority[2] = 7;
+		priority[3] = 1;
+	}else if(judgeOperator == 4){
+		priority[0] = 2;
+		priority[1] = 3;
+		priority[2] = 1;
+		priority[3] = 7;
+	}
+}
+\end{lstlisting}
+上記のjudgeNameの返り値を取得によって優先度を振っている．ここでも変更を加えるオペレータを4個に絞って優先度を変更した．
+\section{実行結果}
+出力された結果をすべて載せてしまうと長くなってしまうため，30回実行し，その平均時間のみを示す．また，性能の差を示すため前回の結果も共に示す．
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+前回の平均時間(ミリ秒) & 1103 \\ \hline
+今回の平均時間(ミリ秒) & 938 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+平均時間が約15％短くなっていることがわかった．
+\section{考察}
+上述のように，優先度を振りなおしながらプランニングした方が高速に処理ができていることがわかった．\\
+処理時間は短くなったが，前回からの問題であるプログラマー依存性の高さは解消することができなかった．また，judgeNameでは名前に含まれる単語をもとに判定を行ったが，これはオペレータの数が少なく含まれる単語が少ないからこそできた方法である．オペレータが増えた場合でも判定する方法として，今回の課題でも使っているUnifierを用いて判定することができると考えた．ただしUnifierを通すとさらにそこで処理に時間がかかってしまうと思い，この課題では単純な方法で判定を行った．
+\section{感想}
+今回の課題は，前回作ったものを改良するというもので，どのように処理を高速するか悩んだ．自分で具体的な数字を与えるのではなく，なんとかプログラムで優先度を計算できないかと思ったが，計算方法が全く思いつかず，結果すべて手打ちで優先度を振るという無理やりな方法となってしまった．
+\end{document}
