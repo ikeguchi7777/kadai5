@@ -1,0 +1,107 @@
+\documentclass{jarticle}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題6}
+\author{グループ7\\
+  29114048 北原 太一\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年12月9日}
+
+\begin{document}
+\maketitle
+
+\subparagraph{提出物} rep6
+\subparagraph{グループ} グループ7
+\subparagraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline
+  学生番号&氏名&貢献度比率\\
+  \hline\hline
+  29114007&池口弘尚&100\\
+  \hline
+  29114031&大原拓人&100\\
+  \hline
+  29114048&北原太一&100\\
+  \hline
+  29114086&飛世裕貴&100\\
+  \hline
+  29114095&野竹浩二朗&100\\
+  \hline
+\end{tabular}
+
+\section{課題の説明}
+\begin{itembox}{課題6-1}
+　課題5にやり残した発展課題があれば参考にして拡張しても良いし，全く新しい独自仕様を考案しても構わない．自由に拡張するか，あるいはもし残っていた問題点があれば完成度を高めよ．
+\end{itembox}
+
+私は、目標状態をソートするメソッドsortGoalListの作成を担当した．
+\section{課題5の問題点}
+課題5のプログラムにおいて，ソースコード\ref{lst:initGoal}のような目標集合を考える．
+\newpage
+  \begin{lstlisting}[caption=Planner.java(一部抜粋),label=lst:initGoal]
+private Vector<String> initGoalList() {
+  Vector<String> goalList = new Vector<String>();
+  goalList.addElement("A on B");
+  goalList.addElement("B on C");
+  return goalList;
+}
+  \end{lstlisting}
+ 
+この状態で実行すると，
+\begin{enumerate}
+\item[手順1] AをBの上に乗せる
+\item[手順2] AをBの上から降ろす
+\item[手順3] BをCの上に乗せる
+\item[手順4] AをBの上に乗せる
+\end{enumerate}
+以上のような手順で問題を解決し，手順1, 2は無駄な操作となってしまう．状態集合にアサーションを追加する順番を入れ替えれば無駄な手順がなくなるため，我々は追加されたアサーションの順番をソートすることにした．
+
+\section{実装}
+実装に際して，directPriorityというHashTableと，indirectPriorityというVectorを考える．
+
+directPriorityは，ブロックとその階数を対応付けている．例えば，テーブルの上にA，Aの上にB，Bの上にCがある場合，Aの階数は0，Bの階数は1，Cの階数は2である．
+
+indirectPriorityは，ブロックとその下にあるブロックの対応を格納している．先述の例に従うと，indirectPriorityには\{B, A\}と\{C, B\}が格納される．
+  
+sortGoalListメソッドにおいては，まず目標集合に含まれるすべてのアサーションに対し，それが``ontable X''ならばdirectPriorityにXの階数が0であるという対応を追加し，``X on Y''ならばindirectPriorityに\{X, Y\}を追加する．その後，後述する方法でindirectPriorityをdirectPriorityに変換し，階数の少ないブロックに言及するアサーションが最初になるように目標状態をソートする．
+
+\section{indirectPriorityからdirectPriorityへの変換}
+変換は，以下のような手順で行う．
+\begin{enumerate}
+\item indirectPriorityから要素を1つ取り出す
+\item その要素の2つ目のブロック，すなわち，下側にあるブロックの階数がすでにdirectPriorityからわかる場合，1つ目のブロック，すなわち，上側にあるブロックと(下側のブロックの階数+1)の対応をdirectPriorityに格納する
+\item 2.の条件が満たされなかった場合，下側にあるブロックの階数を目標集合の要素数，上側にあるブロックの階数をその数+1とし，対応をdirectPriorityに格納する
+\end{enumerate}
+
+この手順をindirectPriorityの要素がなくなるまで繰り返すことにより，すべてのブロックの階数が分かる．
+
+\section{考察}
+sortGoalListメソッドをinitGoalListメソッドの直後に呼び出すことにより，効率よく目標アサーションの選択を行うことができるようになった．しかしながら，このメソッド中に二重以上のfor文が3回使われており，計算時間は長くなってしまっているため，プランニング全体の効率はあまり向上したとは言えない．
+\end{document}
