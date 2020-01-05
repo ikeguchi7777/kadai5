@@ -12,7 +12,7 @@ public class Unifier {
 	Hashtable<String, String> vars;
 
 	public Unifier() {
-		//vars = new Hashtable();
+		vars = new Hashtable();
 	}
 
 	public boolean unify(String string1, String string2, Hashtable<String, String> theBindings) {

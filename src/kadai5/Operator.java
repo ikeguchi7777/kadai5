@@ -74,7 +74,8 @@ public class Operator {
 			theState.addElement(addList.elementAt(i));
 		}
 		for (int i = 0; i < deleteList.size(); i++) {
-			theState.removeElement(deleteList.elementAt(i));
+			if(!theState.removeElement(deleteList.elementAt(i)))
+				System.out.println("not delete:"+deleteList.elementAt(i));
 		}
 		return theState;
 	}

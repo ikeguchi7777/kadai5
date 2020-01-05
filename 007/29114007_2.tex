@@ -1,0 +1,189 @@
+\documentclass{jarticle}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings,jlisting}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+%ここまでソースコードの表示に関する設定
+
+\title{知能プログラミング演習II 課題6}
+\author{グループ07\\
+  29114007 池口　弘尚\\
+%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+}
+\date{2019年12月2日}
+
+\begin{document}
+\maketitle
+
+\paragraph{提出物} rep5
+\paragraph{グループ} グループ07
+\paragraph{メンバー}
+\begin{tabular}{|c|c|c|}
+  \hline
+  学生番号&氏名&貢献度比率\\
+  \hline\hline
+  29114007&池口弘尚&\\
+  \hline
+  29114031&大原拓人&\\
+  \hline
+  29114048&北原太一&\\
+  \hline
+  29114086&飛世裕貴&\\
+  \hline
+  29114095&野竹浩二朗&\\
+\end{tabular}
+
+\section{課題の説明}
+\begin{description}
+\item[課題6-1] 課題5にやり残した発展課題があれば参考にして拡張しても良いし，全く新しい独自仕様を考案しても構わない．自由に拡張するか，あるいはもし残っていた問題点があれば完成度を高めよ．
+\end{description}
+
+\section{課題6-1}
+\begin{screen}
+課題5にやり残した発展課題があれば参考にして拡張しても良いし，全く新しい独自仕様を考案しても構わない．自由に拡張するか，あるいはもし残っていた問題点があれば完成度を高めよ．
+\end{screen}
+
+私は，前回実装することができなかった以下の３つを実装した．
+\begin{itemize}
+\item 三角形の上にものが置けないなどの条件付け
+\item 具体化時に他の候補も調べる
+\item 最適になるようにゴールリストを並べ替える
+\end{itemize}
+
+\subsection{実装}
+条件付けに関しては，前回実装した禁止制約を利用することによって，容易に実装することができた．
+常に働く禁止制約であるtheBlockListに初期状態として
+"\#Place ?* on A"
+といったようなものを持たせることによって，Aの上にはものを置けないようにすることができる．
+
+この?*は具体化しない文字であり，どのようなものでも一致するようになっている．
+これはUnifier中に以下のように実装した．
+
+\begin{lstlisting}[caption=具体化しない変数の実装,label=src:unifier]
+boolean varMatching(String vartoken, String token) {
+    //どちらかが?*なら具体化せずにマッチング成立
+    if(varAll(vartoken)||varAll(token))
+        return true;
+    //以下省略
+}
+
+boolean varAll(String str) {
+    // ?*なら具体化しない
+    return var(str)&&str.charAt(1)=='*';
+}
+\end{lstlisting}
+
+前回の実装ではそれぞれの状態が一意に決まっていなければ解を求めることができなかった．
+そのため，今回は他の解の候補も調べることができるようにした．
+
+実装は，planningAGoalの一部を変更して，以下のようになった．
+
+\begin{lstlisting}[caption=他の具体化も調べる,label=src:planagoal]
+private int planningAGoal(String theGoal, Vector<String> theCurrentState,
+        Hashtable<String, String> theBinding, int cPoint, Vector<String> theBlockList) {
+    System.out.println("**" + theGoal);
+    if (cPoint <= 0) {
+        int size = theCurrentState.size();
+        //0ではなくcPointから始める
+        for (int i = -cPoint; i < size; i++) {
+            String aState = theCurrentState.elementAt(i);
+            if ((new Unifier()).unify(theGoal, aState, theBinding)) {
+                //次のiをマイナスにしたものを返す
+                return -i - 1;
+            }
+        }
+    }
+    //上で一回でも具体化されていて，ここを通ったら失敗
+    if (cPoint < 0)
+        return Integer.MIN_VALUE;
+    //以下省略
+}
+\end{lstlisting}
+
+planningAGoalは-1でエラーを返す使用だったが，仕様変更でInteger.MIN\_VALUEでエラーを表すように変更した．
+theCurrentStateとの照合では，常に0を返していたところを次のインデックスに変えることによって，全ての候補を調べることが可能になった．
+また，一度でも具体化されているものはオペレータを必要とすることはないため，cPointの値でカットするようになっている．
+\newline
+
+また，前回までは与えられたゴールの順番の通りに解を導いていたが，その順番によっては同じことを繰り返してしまうことがあるため，最初に並べなおすように変更した．
+実装は以下のようになった．
+
+\begin{lstlisting}[caption=ゴールリストの中身を並べなおす,label=src:blockList]
+Vector<String> checkRoute(Vector<String> goalList, Vector<String> initState) {
+    Vector<String> newGoal = new Vector<>();
+    Vector<String> list = new Vector<>();
+    for (String goal : goalList) {
+        StringTokenizer tokenizer = new StringTokenizer(goal);
+        String x = tokenizer.nextToken();
+        tokenizer.nextToken();
+        String y = tokenizer.nextToken();
+        //xとyが名前になるようにする
+        for (String state : initState) {
+            if ((new Unifier()).unify("?x has a characteristic of " + x, state)) {
+                StringTokenizer t = new StringTokenizer(state);
+                x = t.nextToken();
+            }
+            
+            if ((new Unifier()).unify("?x has a characteristic of " + y, state)) {
+                StringTokenizer t = new StringTokenizer(state);
+                y = t.nextToken();
+            }
+        }
+        boolean isadd = false;
+        for (int i = 0; i < list.size(); i++) {
+            //A on Bの前にB on Cをする
+            if (list.get(i).equals(x)) {
+                list.add(i, y);
+                newGoal.add(i, goal);
+                isadd = true;
+                break;
+            }
+        }
+        if (!isadd) {
+            list.add(y);
+            newGoal.add(goal);
+        }
+    }
+    return newGoal;
+}
+\end{lstlisting}
+
+\subsection{考察}
+条件付けは，応用することによって，様々な特性を付与することができると思われる．
+
+解の候補だが，これによって形や色などを同列に扱って，オペレータを減らすことには成功した．
+しかし，rect(B) on rect(C)のようなゴールを設定すると，rectの具体化がBで止まってしまい，B on Bとなってしまう．
+これをプランニングで解決しようとすると，より根本的な見直しが必要になると思われ，今回は実装できなかった．
+
+ゴールリストの順番の並べ替えだが，ここに手を加えれば，このタイプの問題ではより効率よく解を求めることができると思われる．
+しかし，今回はプランニングの課題であるために，実行可能であるかなどをあえて確かめないようにしている．
+
+
+\section{感想}
+まだまだ正確に解くことができない組み合わせが存在している．
+それらを，プランニングを用いて上手く解く方法が思い浮かばなかったため，実装することができなかった．
+特に色や形などは，最初に一括で変えてしまえば楽に解くことができるが，それではプランニングにはならないと思われたため，今回のような実装になった．
+しかし，この実装方法のために，具体化の候補が複数になり，問題がより複雑になり，上手く解く方法がわからなくなってしまった．
+\end{document}
