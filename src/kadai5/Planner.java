@@ -24,8 +24,6 @@ public class Planner {
 
 	Vector<String> checkRoute(Vector<String> goalList, Vector<String> initState) {
 		Vector<String> newGoal = new Vector<>();
-		Hashtable<String, String> binding = new Hashtable<>();
-		int count = 0;
 		Vector<String> list = new Vector<>();
 		for (String goal : goalList) {
 			StringTokenizer tokenizer = new StringTokenizer(goal);
