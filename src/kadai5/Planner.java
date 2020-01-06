@@ -13,9 +13,15 @@ public class Planner {
 	Vector<Operator> plan;
 	Vector<String> blockNext = new Vector<>();
 	Vector<String> GoalList;
+	int[] priority = {2,3,1,4,5,5,6,6,6,6,6,6};
+
 
 	public static void main(String argv[]) {
+		long st = System.currentTimeMillis();
 		(new Planner()).start();
+		long et = System.currentTimeMillis();
+		long totalTime = et - st;
+		System.out.println("time:" + totalTime);
 	}
 
 	public Planner() {
@@ -107,20 +113,20 @@ public class Planner {
 			System.out.println((op.instantiate(theBinding)).name);
 		}
 
-		System.out.println("state: " + initialState);
-		System.out.println("plan: " + plan);
-		System.out.println("binding: " + theBinding);
+		//System.out.println("state: " + initialState);
+		//System.out.println("plan: " + plan);
+		//System.out.println("binding: " + theBinding);
 	}
 
 	/**
-	 * GUIで探索を行うためのメソッド
-	 * ゴールリストはすべて?x on ?yの形で
-	 * initialStateはShape.makeで作ったものを入れれば良い
-	 * 探索が失敗するとnullを返す
-	 * @param goalList
-	 * @param initialState
-	 * @return plan
-	 */
+	* GUIで探索を行うためのメソッド
+	* ゴールリストはすべて?x on ?yの形で
+	* initialStateはShape.makeで作ったものを入れれば良い
+	* 探索が失敗するとnullを返す
+	* @param goalList
+	* @param initialState
+	* @return plan
+	*/
 	public Vector<Operator> GUIStart(Vector<String> goalList, Vector<String> initialState) {
 		blockNext.removeAllElements();
 		initOperators();
@@ -214,7 +220,11 @@ public class Planner {
 						//System.out.println("Success !");
 						return true;
 					} else {
-						cPoint = tmpPoint;
+						if (tmpPoint == 0)
+						cPoint++;
+						else
+						cPoint = tmpPoint + 1;
+						//cPoint=tmpPoint;
 						//System.out.println("Fail::"+cPoint);
 						theGoalList.add(0, aGoal);
 
@@ -266,13 +276,15 @@ public class Planner {
 		//変えなきゃいけないところ！
 
 		//初期状態(ランダムで決定)
-		/*int randInt = Math.abs(rand.nextInt()) % operators.size();
-		Operator op = operators.elementAt(randInt);
-		operators.removeElementAt(randInt);
-		operators.addElement(op);*/
-		//Operator op = operators.elementAt(0);
-		//operators.removeElementAt(0);
+		//int randInt = Math.abs(rand.nextInt()) % operators.size();
+		//Operator op = operators.elementAt(randInt);
+		//operators.removeElementAt(randInt);
 		//operators.addElement(op);
+		Operator op = operators.elementAt(0);
+		operators.removeElementAt(0);
+		operators.addElement(op);
+		int judgeOperator = judgeName(op);
+		resetPriority(judgeOperator);
 		sortOp();
 		Vector<String> theBlockNext = blockNext;
 
@@ -301,8 +313,8 @@ public class Planner {
 			Vector<String> addList = anOperator.getAddList();
 			for (int j = 0; j < addList.size(); j++) {
 				if ((new Unifier()).unify(theGoal,
-						addList.elementAt(j),
-						theBinding)) {
+				addList.elementAt(j),
+				theBinding)) {
 					Operator newOperator = anOperator.instantiate(theBinding);
 					for (String block : theBlockList) {
 						/*if (operators.elementAt(i).name.equals(block))
@@ -432,7 +444,7 @@ public class Planner {
 		blockList1.addElement("remove ?x from on top ?y");
 		blockList1.addElement("Place ?x on ?y");
 		// PRIORITY
-		int priority1 = 10;
+		int priority1 = priority[0];
 		Operator operator1 = new Operator(name1, ifList1, addList1, deleteList1, priority1, blockList1);
 		operators.addElement(operator1);
 
@@ -461,7 +473,7 @@ public class Planner {
 		blockList2.addElement("Place ?x on ?y");
 		blockList2.addElement("remove ?x from on top ?y");
 		// PRIORITY
-		int priority2 = 4;
+		int priority2 = priority[1];
 		Operator operator2 = new Operator(name2, ifList2, addList2, deleteList2, priority2, blockList2);
 		operators.addElement(operator2);
 
@@ -488,7 +500,7 @@ public class Planner {
 		blockList3.addElement("put ?x down on the table");
 		blockList3.addElement("pick up ?x from the table");
 		// PRIORITY
-		int priority3 = 1;
+		int priority3 = priority[2];
 		Operator operator3 = new Operator(name3, ifList3, addList3, deleteList3, priority3, blockList3);
 		operators.addElement(operator3);
 
@@ -513,7 +525,7 @@ public class Planner {
 		blockList4.addElement("put ?x down on the table");
 		blockList4.addElement("pick up ?x from the table");
 		// PRIORITY
-		int priority4 = 11;
+		int priority4 = priority[3];
 		Operator operator4 = new Operator(name4, ifList4, addList4, deleteList4, priority4, blockList4);
 		operators.addElement(operator4);
 
@@ -538,7 +550,7 @@ public class Planner {
 		blockList5.addElement("?x is name of ?y");
 		blockList5.addElement("?z is a characteristic of ?x");
 		/// PRIORITY
-		int priority5 = 5;
+		int priority5 = priority[4];
 		operators.addElement(new Operator(name5, ifList5, addList5, deleteList5, priority5, blockList5));
 
 		// OPERATOR 6
@@ -562,7 +574,7 @@ public class Planner {
 		blockList6.addElement("?x is name of ?z");
 		blockList6.addElement("?y is a characteristic of ?x");
 		/// PRIORITY
-		int priority6 = 5;
+		int priority6 = priority[5];
 		operators.addElement(new Operator(name6, ifList6, addList6, deleteList6, priority6, blockList6));
 
 		// OPERATOR 7
@@ -586,7 +598,7 @@ public class Planner {
 		blockList7.addElement("?y is a characteristic of ?x");
 		blockList7.addElement("?x is name of ?z");
 		/// PRIORITY
-		int priority7 = 10;
+		int priority7 = priority[6];
 		operators.addElement(new Operator(name7, ifList7, addList7, deleteList7, priority7, blockList7));
 
 		// OPERATOR 8
@@ -610,7 +622,7 @@ public class Planner {
 		blockList8.addElement("?z is a characteristic of ?x");
 		blockList8.addElement("?x is name of ?y");
 		/// PRIORITY
-		int priority8 = 10;
+		int priority8 = priority[7];
 		operators.addElement(new Operator(name8, ifList8, addList8, deleteList8, priority8, blockList8));
 
 		/*// OPERATOR 9
@@ -634,9 +646,9 @@ public class Planner {
 		blockList9.addElement("?x is shape of ?y");
 		blockList9.addElement("?z is a shape of ?x");
 		/// PRIORITY
-		int priority9 = 9;
+		int priority9 = priority[8];
 		operators.addElement(new Operator(name9, ifList9, addList9, deleteList9, priority9, blockList9));
-		
+
 		// OPERATOR 10
 		/// NAME:?yの名前は?x
 		String name10 = "?x is shape of ?z";
@@ -658,9 +670,9 @@ public class Planner {
 		blockList10.addElement("?x is shape of ?z");
 		blockList10.addElement("?y is a shape of ?x");
 		/// PRIORITY
-		int priority10 = 9;
+		int priority10 = priority[9];
 		operators.addElement(new Operator(name10, ifList10, addList10, deleteList10, priority10, blockList10));
-		
+
 		// OPERATOR 11
 		/// NAME:?yの特徴は?x
 		String name11 = "?y is a shape of ?x";
@@ -682,9 +694,9 @@ public class Planner {
 		blockList11.addElement("?y is a shape of ?x");
 		blockList11.addElement("?x is shape of ?z");
 		/// PRIORITY
-		int priority11 = 10;
+		int priority11 = priority[10];
 		operators.addElement(new Operator(name11, ifList11, addList11, deleteList11, priority11, blockList11));
-		
+
 		// OPERATOR 12
 		/// NAME:?yの特徴は?x
 		String name12 = "?z is a shape of ?x";
@@ -706,7 +718,7 @@ public class Planner {
 		blockList12.addElement("?z is a shape of ?x");
 		blockList12.addElement("?x is shape of ?y");
 		/// PRIORITY
-		int priority12 = 10;
+		int priority12 = priority[11];
 		operators.addElement(new Operator(name12, ifList12, addList12, deleteList12, priority12, blockList12));*/
 
 		sortOp();
@@ -732,5 +744,44 @@ public class Planner {
 
 		});
 		//System.out.println(operators);
+	}
+
+
+	public int judgeName(Operator op){
+		if((op.name).contains("Place")){
+			return 1;
+		}else if((op.name).contains("remove")){
+			return 2;
+		}else if((op.name).contains("pick")){
+			return 3;
+		}else if((op.name).contains("put")){
+			return 4;
+		}else{
+			return 0;
+		}
+	}
+
+	void resetPriority(int judgeOperator){
+		if(judgeOperator == 1){
+			priority[0] = 7;
+			priority[1] = 7;
+			priority[2] = 2;
+			priority[3] = 1;
+		}else if(judgeOperator == 2){
+			priority[0] = 7;
+			priority[1] = 7;
+			priority[2] = 1;
+			priority[3] = 2;
+		}else if(judgeOperator == 3){
+			priority[0] = 2;
+			priority[1] = 2;
+			priority[2] = 7;
+			priority[3] = 1;
+		}else if(judgeOperator == 4){
+			priority[0] = 2;
+			priority[1] = 3;
+			priority[2] = 1;
+			priority[3] = 7;
+		}
 	}
 }
