@@ -47,7 +47,7 @@ public class MakeGUI {
                     System.exit(0);
                     break;
                 case "Reset":
-                    panelDraw.init(SetInitial.getInit(), new Vector<>(goalList));
+                    panelDraw.init(SetInitial.getInit(), SetInitial.getGoal());
                     break;
                 default:
                     System.out.println("can't resolve cmd:(");
