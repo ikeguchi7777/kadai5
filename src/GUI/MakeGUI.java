@@ -17,16 +17,14 @@ import javax.swing.JPanel;
  */
 public class MakeGUI {
     public static void main(String[] args) {
-        MakePlannerGUI();
+        MakePlannerGUI(DrawCanvas.initState(),DrawCanvas.goalList());
     }
 
-    public static void MakePlannerGUI() {
+    public static void MakePlannerGUI(Vector<String> initState,Vector<String> goalList) {
         // Draw Space
         DrawCanvas panelDraw = new DrawCanvas();
         panelDraw.setBackground(Color.WHITE);
-        Vector<String> initState = panelDraw.initState();
-        Vector<String> goalList = panelDraw.goalList();
-        panelDraw.init(new Vector<>(initState), new Vector<>(goalList));
+        panelDraw.init(initState, goalList);
 
         JPanel stateLabel = new JPanel();
         JLabel label1 = new JLabel("");
@@ -49,7 +47,7 @@ public class MakeGUI {
                     System.exit(0);
                     break;
                 case "Reset":
-                    panelDraw.init(new Vector<>(initState), new Vector<>(goalList));
+                    panelDraw.init(SetInitial.getInit(), new Vector<>(goalList));
                     break;
                 default:
                     System.out.println("can't resolve cmd:(");

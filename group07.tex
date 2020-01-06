@@ -5,6 +5,7 @@
 \usepackage{listings,jlisting}
 \usepackage{ascmac}
 \usepackage{amsmath,amssymb}
+\usepackage{here}
 
 %ここからソースコードの表示に関する設定
 \lstset{
@@ -34,7 +35,7 @@
     29114048 北原 太一\\
     29114086 飛世 裕貴\\
     29114095 野竹 浩二朗\\
-%  {\small (グループレポートの場合は、グループ名および全員の学生番号と氏名が必要)}
+%  {\small (グループレポートの場合は，グループ名および全員の学生番号と氏名が必要)}
 }
 \date{2019年12月10日}
 
@@ -48,15 +49,15 @@
     \hline
     学生番号&氏名&担当箇所\\
     \hline\hline
-    29114007&池口弘尚&4-3,4-4\\
+    29114007&池口弘尚&5-1,5-3\\
     \hline
-    29114031&大原拓人&4-3\\
+    29114031&大原拓人&5-4\\
     \hline
-    29114048&北原太一&4-1\\
+    29114048&北原太一&5-1\\
     \hline
-    29114086&飛世裕貴&4-2\\
+    29114086&飛世裕貴&5-2\\
     \hline
-    29114095&野竹浩二朗&4-2,4-4\\
+    29114095&野竹浩二朗&5-2\\
     \hline
 \end{tabular}
 
@@ -87,6 +88,161 @@
     目標集合を変えてみたときに，動作が正しくない場合があったかどうか，実行例を示して考察せよ．
     また，もしあったならその箇所を修正し，どのように修正したか記せ．
 \end{screen}
+\subsection{動作例29114007-池口弘尚}
+"A remove from on top B"と"Place A on B"という操作は打ち消し合ってしまうため，これが永遠と続くとオーバーフローしてしまう．
+これを解決するために，特定のオペレータが続かないようにフィルターをかけた．
+
+また，"Place A on B"を実行するとなると"clear B"と"holding A"を満たさなければならなくなり，それを満たすために"Place A on B"を使割れてしまい，ループに陥ってしまった．
+これを解決するため，試行するオペレータを保持しておいて，それ以降のオペレータと比較して同じものをフィルタリングした．
+\subsection{実装29114007-池口弘尚}
+"Place ?x on ?y"の後には"remove ?x from on top ?y"が来ることは絶対にないので，それらをメンバー変数として保持しておいて，次のオペレータから除くという方法でループが起こらないようにした．実装は，planningAGoalの一部を変更して，以下のように実装した．
+
+\begin{lstlisting}[caption=特定のオペレータが続かないようにする,label=src:blockNext]
+private int planningAGoal(String theGoal, Vector<String> theCurrentState,
+    // 略
+    // 1つ前のblockNextを記憶しておく
+    Vector<String> theBlockNext = blockNext;
+    
+    loop: for (int i = cPoint; i < operators.size(); i++) {
+        for (String dontnext : blockNext) {
+            // blockNextに入っているオペレータはスキップ
+            if (operators.elementAt(i).name.equals(dontnext))
+                continue loop;
+        }
+        // 略
+        for (int j = 0; j < addList.size(); j++) {
+            if ((new Unifier()).unify(theGoal,
+                addList.elementAt(j),
+                    theBinding)) {
+                Operator newOperator = anOperator.instantiate(theBinding);
+                //次のオペレータが決定したらblockNextを更新する
+                blockNext = anOperator.getBlockList();
+                // 略
+                // その後のプランニングが成功したとき
+                if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
+                    // 略
+                    // blockNextは空にする
+                    blockNext.removeAllElements();
+                    return i + 1;
+                }
+                // 失敗したとき
+                else {
+                    // 略
+                    // blockNextを以前の状態に復元する．
+                    blockNext = theBlockNext;
+                }
+            }
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+まずiが決まったすぐあとに，それに対応するオペレータがblockNextに含まれていないか確認して，含まれていれば次のループに移行するようになっている．
+その後，オペレータが定まったら，そのオペレータが持っているブロックリストを利用してblockNextを更新する．
+プランが成功するとblockNextを空にして，失敗すると元の状態に戻す．
+\newline
+
+また，"Place A on B"をもとに新たなゴールが設定されたときに，それを達成するために"Place A on B"を行うことはないため，それらも別に保持しておいて，フィルターとして活用した．
+
+\begin{lstlisting}[caption=変数まで同じオペレータが呼ばれないようにする,label=src:blockList]
+private int planningAGoal(String theGoal, Vector<String> theCurrentState,
+        Hashtable<String, String> theBinding, int cPoint, Vector<String> theBlockList) {
+    // 略
+    loop: for (int i = cPoint; i < operators.size(); i++) {
+        // 略
+        for (int j = 0; j < addList.size(); j++) {
+            if ((new Unifier()).unify(theGoal,
+                    addList.elementAt(j),
+                    theBinding)) {
+                Operator newOperator = anOperator.instantiate(theBinding);
+                for (String block : theBlockList) {
+                    // ブロックリストと一致すれば次のオペレータへ
+                    if ((new Unifier()).unify(newOperator.name, block, theBinding))
+                        continue loop;
+                }
+                Vector<String> newGoals = newOperator.getIfList();
+                // IFListから#がついたリストを分離
+                Vector<String> addblocks = getBlockList(newGoals);
+                // theBlockListに追加する．
+                theBlockList.addAll(addblocks);
+                // 略
+                if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
+                    // 略
+                    // 元に戻す
+                    theBlockList.removeAll(addblocks);
+                    return i + 1;
+                }
+                else {
+                    // 略
+                    // 元に戻す
+                    theBlockList.removeAll(addblocks);
+                }
+            }
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+\subsection{考察29114007-池口弘尚}
+上記の実装を行う前は，競合してしまっているオペレータが無限にお互いを呼び出し合ってオーバーフローを起こしてしまうことがあったが，上記のように実装することによって，そのようなことを防ぐことができるようになった．
+ただ，blockNextは単なる比較だが，Unifierではバインディングをしてしまっているので，バインディングリストをもとに戻す必要があると考えられる．
+しかし，今回の実装では前後関係上もとに戻すようなことができなかったので，Unifier上で値を具体化せずに比較できるようなメソッドを作成した方が良いと思われる．
+
+\subsection{実装29114048-北原太一}
+\subsubsection{動作が不正な目標集合}
+動作が正しくない目標集合をソースコード\ref{lst:wrongGoal}に示す．
+  \begin{lstlisting}[caption=Planner.java(一部抜粋),label=lst:wrongGoal]
+private Vector<String> initGoalList() {
+  Vector<String> goalList = new Vector<String>();
+  goalList.addElement("A on B");
+  goalList.addElement("B on C");
+  return goalList;
+}
+  \end{lstlisting}
+  
+これは，正常に動作する元々の目標集合から，二状態の順番を入れ替えただけのものであるが，この目標集合でプログラムを実行した場合，ソースコード\ref{lst:wrongPlan}のような実行結果が得られる．
+\begin{lstlisting}[caption=実行例(抜粋),label=lst:wrongPlan]
+***** This is a plan! *****
+pick up A from the table
+Place A on A
+remove A from on top A
+Place A on B
+remove A from on top B
+put A down on the table
+pick up B from the table
+Place B on C
+\end{lstlisting}
+
+3行目においてAをAの上に置くという実行不可能なプランを示しているうえ，その後AをBの上に乗せ降ろしし，BをCの上に乗せたところで動作が停止する．
+
+\subsubsection{Operatorの修正}
+\label{sec:1Operator}
+プログラムの実行後にplanを出力するようにすると，ソースコード\ref{lst:plan}のような出力が得られた．
+\begin{lstlisting}[caption=実行例(抜粋),label=lst:plan]
+NAME: pick up A from the table
+IF :[handEmpty]
+ADD:[holding A]
+DELETE:[ontable A, clear A, handEmpty]
+\end{lstlisting}
+
+本来，``pick up A from the Table''のルールは，if節に``ontable A'', ``clear A'', ``handEmpty''の3つのアサーションを持っているはずであるが，ソースコード\ref{lst:plan}においては``handEmpty''の1アサーションしか持っていない．これは，Operatorクラスの各Vectorのゲッタがシャローコピーを返しているために起こっている．そのため，ディープコピーを返すように修正した．
+
+\subsubsection{testPlanメソッドの導入}
+\label{sec:1Test}
+planningメソッドで得られたplanを用いて，初期状態から目標状態にたどり着けるかどうかを確認するtestPlanメソッドを導入した．このメソッドで初期状態からプランを実行していき，実行不可能なプランにたどり着いたらその時点での状態を初期状態とし，新たにplanningメソッドを呼び出すようにした．
+
+\subsection{考察29114048-北原太一}
+\ref{sec:1Operator}節で示したOperatorの修正や，
+\ref{sec:1Test}節で示したtestPlanメソッドの導入を行ったが，
+課題の根本的な解決には至らなかった．
+とくに後者に関しては，無限ループを形成したり，
+そもそもplanningメソッドを何回も呼び出すため，
+実行時間がかかりすぎるという問題点があるため，
+最終的には用いることはなかった．
+具体的な解決法に関してはグループレポートを参照されたい．
+
 
 \section{課題5-2}
 \begin{screen}
@@ -94,6 +250,228 @@
     これを，効果的な競合解消戦略に改良すべく考察し，実装せよ．
     改良の結果，性能がどの程度向上したかを定量的に（つまり数字で）示すこと．
 \end{screen}
+\subsection{手法29114086-飛世裕貴}
+ここでは競合解消戦略として各オペレータに優先度を設ける事にした.優先度はOperatorクラスのインスタンスpriorityとして設けている.このpriorityの値により,考えられるオペレータ群をソートし最も優先度の高いものを選択するようにする.なおこの時，オペレータAを展開した後に再びオペレータAを展開してしまうことを許容してしまうと無限ループに陥る可能性が高くなるので，これを防ぐために展開を禁止するオペレータ群を設け，展開済みのオペレータを連続で展開するという動作を防ぐようにした．
+
+\subsection{実装29114086-飛世裕貴}
+前述した手法を実装したコードを以下に示す．
+
+\begin{lstlisting}[caption=PlannerクラスのplanningAGoalメソッドより変更点を抜粋]
+sortOp();
+Vector<String> theBlockNext = blockNext;
+
+loop: for (int i = cPoint; i < operators.size(); i++) {
+	step++;
+	for (String dontnext : blockNext) {
+		if (operators.elementAt(i).name.equals(dontnext))
+			continue loop;
+	}
+	Operator anOperator = rename(operators.elementAt(i));
+	
+				   ・
+				   ・
+				(中略)
+				   ・
+				   ・
+				   
+	Vector<String> addList = anOperator.getAddList();
+	for (int j = 0; j < addList.size(); j++) {
+		if ((new Unifier()).unify(theGoal,
+				addList.elementAt(j),
+				theBinding)) {
+			Operator newOperator = anOperator.instantiate(theBinding);
+			for (String block : theBlockList) {
+				if ((new Unifier()).unify(newOperator.name, block, theBinding))
+					continue loop;
+			}
+			blockNext = anOperator.getBlockList();
+			Vector<String> newGoals = newOperator.getIfList();
+			Vector<String> addblocks = getBlockList(newGoals);
+			theBlockList.addAll(addblocks);
+			System.out.println(newOperator.name);
+			if (planning(newGoals, theCurrentState, theBinding, theBlockList)) {
+				newOperator = newOperator.instantiate(theBinding);
+				System.out.println(newOperator.name);
+				plan.addElement(newOperator);
+				theCurrentState = newOperator.applyState(theCurrentState);
+				theBlockList.removeAll(addblocks);
+				blockNext.removeAllElements();
+				return i + 1;
+			} else {
+			
+				   ・
+				   ・
+				(後略)
+
+\end{lstlisting}
+\begin{verbatim}
+
+\end{verbatim}
+このコードにおいて，1行目のsortOpメソッドでは考えられるオペレータ群に対して優先度によってソートを行なっている．その後6〜9行目で選んだオペレータが禁止オペレータ群に含まれているかどうかを判定し，含まれているのであればその後の処理を飛ばして次のオペレータに関して同様の判定を行うようにしている．そして28〜31行目において，theBlockListにオペレータの展開を行うたびに禁止オペレータ群を加えていくことで前述したような同じオペレータを連続で行うという動作を防ぐようにした．
+
+\subsection{実行例29114086-飛世裕貴}
+このプログラムを実行した結果，得られたプランを以下に示す．
+\begin{screen}
+\begin{verbatim}
+*** GOALS ***[triangle on B, B on green]
+\end{verbatim}
+\vdots
+(中略)\\
+\vdots
+\begin{verbatim}
+***** This is a plan! *****
+pick up A from the table
+Place A on B
+A is shape of triangle
+B is shape of rect
+triangle is a shape of A
+rect is a shape of B
+A is name of red
+B is name of blue
+red is a characteristic of A
+blue is a characteristic of B
+remove A from on top B
+put A down on the table
+pick up B from the table
+Place B on C
+C is name of green
+pick up A from the table
+Place A on B
+A is shape of triangle
+\end{verbatim}
+\end{screen}
+\begin{center}
+図１:プランニング実行結果
+\end{center}
+\begin{verbatim}
+
+\end{verbatim}
+このようにプランが正しく得られている事が確認できた．またこの時，競合解消戦略としてランダムなオペレータ選択を行なった場合と優先度を用いてオペレータ選択を行った場合に各処理にかかるステップ数を以下に示す．
+\begin{verbatim}
+
+\end{verbatim}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+  \hline
+  戦略&ステップ数\\
+  \hline
+  ランダム(100回平均)&14010.7\\
+  \hline
+  優先度&1099\\
+  \hline
+\end{tabular}
+\end{center}
+\begin{center}
+表１:各戦略のステップ数
+\end{center}
+\begin{verbatim}
+
+\end{verbatim}
+このように優先度を用いて競合解消を行う事でランダムにオペレータ選択を行った場合に比べて，ステップ数が平均的に1/10程度に減少することが確認できた．
+
+\subsection{考察29114086-飛世裕貴}
+今回の課題では上述したような実行結果が得られ，ランダムにオペレータ選択を行うよりも優先度を用いてオペレータ選択を行う方がよりステップ数が少なくなり，高速にプランニングが実行できることがわかった．しかし優先度を用いる場合には，その優先度をどのように決定するのか，よりステップ数を少なくする優先度の決め方はどのようなものかと言った問題点が生じてしまう．この問題はどのようにして理想的なヒューリスティックス関数を求めるかという問題と同様のもので，解決困難な問題である．また今回のように優先度をプログラマが決定するようにすると，得られる結果はプログラマ依存性の高いものになってしまうと考えられる．
+
+\subsection{手法29114095-野竹浩二朗}
+オペレータに優先度をつけ,その優先度順にソートし次のオペレータを決定していく.
+
+\subsection{実装29114095-野竹浩二朗}
+まず，優先度をつけても動作するよう,コンストラクタにint型のpriorityを追加した．それに応じて，Operatorクラスに以下の変更を行った．
+\begin{itemize}
+\item 優先度を返すgetPriority()メソッドを追加
+\item toStringメソッドで優先度も出力できるよう，priorityの値を追加
+\end{itemize}
+また，PlannerクラスのinitOperatorsメソッドも変更した．以下に例を示す．
+\begin{lstlisting}
+// OPERATOR 1
+/// NAME
+String name1 = new String("Place ?x on ?y");
+/// IF
+Vector<String> ifList1 = new Vector<String>();
+ifList1.addElement("#Place ?x on ?y");
+ifList1.addElement("?x is name");
+ifList1.addElement("?y is name");
+ifList1.addElement(new String("clear ?y"));
+ifList1.addElement(new String("holding ?x"));
+/// ADD-LIST
+Vector<String> addList1 = new Vector<String>();
+addList1.addElement(new String("?x on ?y"));
+addList1.addElement(new String("clear ?x"));
+addList1.addElement(new String("handEmpty"));
+/// DELETE-LIST
+Vector<String> deleteList1 = new Vector<String>();
+deleteList1.addElement(new String("clear ?y"));
+deleteList1.addElement(new String("holding ?x"));
+/// BLOCK-LIST
+Vector<String> blockList1 = new Vector<>();
+blockList1.addElement("remove ?x from on top ?y");
+blockList1.addElement("Place ?x on ?y");
+// PRIORITY
+int priority1 = 2;
+Operator operator1 = new Operator(name1, ifList1, addList1, deleteList1, priority1, blockList1);
+operators.addElement(operator1);
+\end{lstlisting}
+これはyの上にxを置くというオペレータだが，最後に優先度を表すpriority1を設定している．\\
+ランダムでオペレータを決定した場合と優先度をつけてオペレータを決定する場合とでどの程度効率に差が出たかを示すため，メインメソッドを以下のように変更し，ミリ秒単位でどれだけ時間がかかったかを出力した．\\
+\begin{lstlisting}
+public static void main(String argv[]) {
+	long startTime = System.currentTimeMillis();
+	(new Planner()).start();
+	long endTime = System.currentTimeMillis();
+	long totalTime = et - st;
+	System.out.println("time:" + totalTime);
+}
+\end{lstlisting}
+今回，オペレータに以下のように優先度を割り振った．\\
+\begin{table}[H]
+\caption{割り振った優先度}
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+オペレータ & 優先度 \\ \hline
+Place ?x on ?y & 2 \\ \hline
+remove ?x from on top ?y & 3 \\ \hline
+pick up ?x from the table & 1 \\ \hline
+put ?x down on the table & 4 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+この優先度は，「まずテーブルの上のものを持ち他のものに置く」という基本の動作を優先的に行うために値を割り振った．
+\section{実行例29114095-野竹浩二朗}
+出力された結果すべてを載せると長くなってしまうため，ループの回数のみを示す．\\
+まず，初期のランダムで次のオペレータを選択する場合を20回分行った結果を示す．\\
+\begin{table}[H]
+\caption{aaa}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+598  & 1240  & 694    & 29815 & 10104   \\ \hline
+2352   & 424  & 1322    & 11140  & 1484   \\ \hline
+1028   & 3693  & 511  & 2771 & 137942  \\ \hline
+27828   & 496 & 34022   & 516  & 1621 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+このような結果になる．平均約13480ミリ秒となった．\\
+優先度をつけた場合の結果を以下に示す．
+\begin{table}
+\caption{かかった時間(ミリ秒)}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+1000  & 901  & 1067 & 927 & 946   \\ \hline
+863  & 1050  & 1120 & 1235 & 1547 \\ \hline
+1444   & 1024 & 1074 & 1570 & 1014  \\ \hline
+1132   & 1048 & 884  & 1056  & 1148 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}[H]
+こちらの平均は約1103ミリ秒となる．
+ランダムで選択した場合，約400ミリ秒という短い時間で終了する場合もあるが，極端に時間がかかってしまう場合もある．一方，優先度をつけた場合は，約1000ミリ秒前後のループとなってしまうが，安定してある程度の速さで結果を求めることができる．
+\section{考察29114095-野竹浩二朗}
+今回のプログラムは，ループ文や再起呼び出しを利用しており，悪手を取ってしまうと極端に効率が落ちてしまうことが分かった．\\
+今回のように固定の優先度ではなく，「この動作の後はこの動作の方が良い」といった場合分けで優先度を変化させていくことができればさらに効率を良くすることができると考える．
+
 
 \section{課題5-3}
 \begin{screen}
@@ -101,23 +479,378 @@
     例えば色と形の両方を扱えるようにする場合，Aが青い三角形，Bが黄色の四角形，Cが緑の台形であったとする．
     その時，色と形を使ってもゴールを指定できるようにする（"green on blue" や"blue on box"のように）
 \end{screen}
+\subsection{手法29114007-池口弘尚}
+オペレータに色や形から，AやBなどといった名前に変換するものを追加することによって，同一のルール上で動くようにしている．
+
+\subsection{実装29114007-池口弘尚}
+オペレータに色や形を扱うものを追加した．
+\begin{lstlisting}[caption=色や形を扱うオペレータ,label=src:operator]
+private void initOperators() {
+    operators = new Vector<Operator>();
+    // 略
+    // OPERATOR 5
+    /// NAME:?yの名前は?x
+    String name5 = "?x is name of ?y";
+    /// IF
+    Vector<String> ifList5 = new Vector<>();
+    ifList5.addElement("#?x is name of ?y");
+    ifList5.addElement("?x has a characteristic of ?y");
+    ifList5.addElement("?x is name");
+    /// ADD-LIST
+    Vector<String> addList5 = new Vector<>();
+    addList5.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList5 = new Vector<>();
+    deleteList5.addElement("?x on ?z");
+    /// BLOCK-LIST
+    Vector<String> blockList5 = new Vector<>();
+    blockList5.addElement("?x is name of ?y");
+    blockList5.addElement("?z is a characteristic of ?x");
+    /// PRIORITY
+    int priority5 = 5;
+    operators.addElement(new Operator(name5, ifList5, addList5, deleteList5, priority5, blockList5));
+    
+    // OPERATOR 6
+    /// NAME:?yの名前は?x
+    String name6 = "?x is name of ?z";
+    /// IF
+    Vector<String> ifList6 = new Vector<>();
+    ifList6.addElement("#?x is name of ?z");
+    ifList6.addElement("?x has a characteristic of ?z");
+    ifList6.addElement("?x is name");
+    ifList6.addElement("?y on ?x");
+    /// ADD-LIST
+    Vector<String> addList6 = new Vector<>();
+    addList6.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList6 = new Vector<>();
+    deleteList6.addElement("?y on ?x");
+    /// BLOCK-LIST
+    Vector<String> blockList6 = new Vector<>();
+    blockList6.addElement("?x is name of ?z");
+    blockList6.addElement("?y is a characteristic of ?x");
+    /// PRIORITY
+    int priority6 = 5;
+    operators.addElement(new Operator(name6, ifList6, addList6, deleteList6, priority6, blockList6));
+    
+    // OPERATOR 7
+    /// NAME:?yの特徴は?x
+    String name7 = "?y is a characteristic of ?x";
+    /// IF
+    Vector<String> ifList7 = new Vector<>();
+    ifList7.addElement("#?y is a characteristic of ?x");
+    ifList7.addElement("?x has a characteristic of ?y");
+    ifList7.addElement("?x is name");
+    ifList7.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList7 = new Vector<>();
+    addList7.addElement("?z on ?x");
+    /// DELETE-LIST
+    Vector<String> deleteList7 = new Vector<>();
+    deleteList7.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList7 = new Vector<>();
+    blockList7.addElement("?y is a characteristic of ?x");
+    blockList7.addElement("?x is name of ?z");
+    /// PRIORITY
+    int priority7 = 10;
+    operators.addElement(new Operator(name7, ifList7, addList7, deleteList7, priority7, blockList7));
+    
+    // OPERATOR 8
+    /// NAME:?yの特徴は?x
+    String name8 = "?z is a characteristic of ?x";
+    /// IF
+    Vector<String> ifList8 = new Vector<>();
+    ifList8.addElement("#?z is a characteristic of ?x");
+    ifList8.addElement("?x has a characteristic of ?z");
+    ifList8.addElement("?x is name");
+    ifList8.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList8 = new Vector<>();
+    addList8.addElement("?x on ?y");
+    /// DELETE-LIST
+    Vector<String> deleteList8 = new Vector<>();
+    deleteList8.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList8 = new Vector<>();
+    blockList8.addElement("?z is a characteristic of ?x");
+    blockList8.addElement("?x is name of ?y");
+    /// PRIORITY
+    int priority8 = 10;
+    operators.addElement(new Operator(name8, ifList8, addList8, deleteList8, priority8, blockList8));
+    
+    // OPERATOR 9
+    /// NAME:?yの名前は?x
+    String name9 = "?x is shape of ?y";
+    /// IF
+    Vector<String> ifList9 = new Vector<>();
+    ifList9.addElement("#?x is shape of ?y");
+    ifList9.addElement("?x has shape of ?y");
+    ifList9.addElement("?x is name");
+    ifList9.addElement("?x on ?z");
+    /// ADD-LIST
+    Vector<String> addList9 = new Vector<>();
+    addList9.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList9 = new Vector<>();
+    deleteList9.addElement("?x on ?z");
+    /// BLOCK-LIST
+    Vector<String> blockList9 = new Vector<>();
+    blockList9.addElement("?x is shape of ?y");
+    blockList9.addElement("?z is a shape of ?x");
+    /// PRIORITY
+    int priority9 = 9;
+    operators.addElement(new Operator(name9, ifList9, addList9, deleteList9, priority9, blockList9));
+    
+    // OPERATOR 10
+    /// NAME:?yの名前は?x
+    String name10 = "?x is shape of ?z";
+    /// IF
+    Vector<String> ifList10 = new Vector<>();
+    ifList10.addElement("#?x is shape of ?z");
+    ifList10.addElement("?x has shape of ?z");
+    ifList10.addElement("?x is name");
+    ifList10.addElement("?y on ?x");
+    /// ADD-LIST
+    Vector<String> addList10 = new Vector<>();
+    addList10.addElement("?y on ?z");
+    /// DELETE-LIST
+    Vector<String> deleteList10 = new Vector<>();
+    deleteList10.addElement("?y on ?x");
+    /// BLOCK-LIST
+    Vector<String> blockList10 = new Vector<>();
+    blockList10.addElement("?x is shape of ?z");
+    blockList10.addElement("?y is a shape of ?x");
+    /// PRIORITY
+    int priority10 = 9;
+    operators.addElement(new Operator(name10, ifList10, addList10, deleteList10, priority10, blockList10));
+    
+    // OPERATOR 11
+    /// NAME:?yの形は?x
+    String name11 = "?y is a shape of ?x";
+    /// IF
+    Vector<String> ifList11 = new Vector<>();
+    ifList11.addElement("#?y is a shape of ?x");
+    ifList11.addElement("?x has shape of ?y");
+    ifList11.addElement("?x is name");
+    ifList11.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList11 = new Vector<>();
+    addList11.addElement("?z on ?x");
+    /// DELETE-LIST
+    Vector<String> deleteList11 = new Vector<>();
+    deleteList11.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList11 = new Vector<>();
+    blockList11.addElement("?y is a shape of ?x");
+    blockList11.addElement("?x is shape of ?z");
+    /// PRIORITY
+    int priority11 = 10;
+    operators.addElement(new Operator(name11, ifList11, addList11, deleteList11, priority11, blockList11));
+    
+    // OPERATOR 12
+    /// NAME:?yの形は?x
+    String name12 = "?z is a shape of ?x";
+    /// IF
+    Vector<String> ifList12 = new Vector<>();
+    ifList12.addElement("#?z is a shape of ?x");
+    ifList12.addElement("?x has shape of ?z");
+    ifList12.addElement("?x is name");
+    ifList12.addElement("?z on ?y");
+    /// ADD-LIST
+    Vector<String> addList12 = new Vector<>();
+    addList12.addElement("?x on ?y");
+    /// DELETE-LIST
+    Vector<String> deleteList12 = new Vector<>();
+    deleteList12.addElement("?z on ?y");
+    /// BLOCK-LIST
+    Vector<String> blockList12 = new Vector<>();
+    blockList12.addElement("?z is a shape of ?x");
+    blockList12.addElement("?x is shape of ?y");
+    /// PRIORITY
+    int priority12 = 10;
+    operators.addElement(new Operator(name12, ifList12, addList12, deleteList12, priority12, blockList12));
+}
+\end{lstlisting}
+
+\#が先頭についているものはblockListに入る．
+
+\subsection{考察29114007-池口弘尚}
+Unifierがバインディングすると，候補が見つかった時点でそれをバインディングリストに入れて，探索が終了してしまう．
+そのため，色や形で別のオペレータを作る必要ができてしまい，結果としてオペレータが増えすぎて，ステップ数が増えてしまったように思われる．
+
 
 \section{課題5-4}
 \begin{screen}
     上記5-2, 5-3で改良したプランニングシステムのGUIを実装せよ．
     ブロック操作の過程をグラフィカルに可視化し，初期状態や目標状態をGUI上で変更できることが望ましい．
 \end{screen}
+\subsection{手法29114031-大原拓人}
+    GUIのためにJAVAのswingを用いる．
+    前問でString型で表現されている状態空間を，
+    物体クラスを作り1クッションおいてGUIに反映する手法を取る．
 
-\section{課題5-5}
-\begin{screen}
-    ブロックワールド内における物理的制約条件をルールとして表現せよ．
-    例えば，三角錐（pyramid）の上には他のブロックを乗せられない等，その世界における物理的な制約を実現せよ．
-\end{screen}
+\subsection{実装29114031-大原拓人}
+    上で述べた物体クラスをGraphicShapeクラスに実装する．物体が持つ情報は
+    名前，色，形，GUIにおける表での座標である．Stringで表されている色を
+    Colorインスタンスに変換するためのstaticなHashMapも用意した．\\
+    Plannerクラスでは初期状態の設定と目標状態の設定が別のところで
+    実行され，そのあとで手順の探索を始める．つまり，初期状態を表す
+    Vector<String>型のインスタンスを受け取り，それをGUIで表せられるように
+    メソッドを実装すればよい．その実装のコードは以下のようになった．
+
+    \begin{lstlisting}[caption=GraphicShape.javaより]
+    public static Vector<GraphicShape> parseState(Vector<String> initInitialState,
+            HashMap<String, GraphicShape> shapeMap) {
+        Vector<GraphicShape> shapes = new Vector<>();
+        for (String string : initInitialState) {
+            Hashtable<String, String> var = new Hashtable<>();
+            if ((new Unifier()).unify("?name is name", string, var)) {
+                GraphicShape gs = new GraphicShape(var.get("?name"));
+                shapes.add(gs);
+                shapeMap.put(var.get("?name"), gs);
+            } else if ((new Unifier()).unify("?name has a characteristic of ?color", string, var))
+                shapeMap.get(var.get("?name")).setColor(var.get("?color"));
+            else if ((new Unifier()).unify("?name has shape of ?shape", string, var))
+                shapeMap.get(var.get("?name")).setShape(var.get("?shape"));
+        }
+        return shapes;
+    }
+    \end{lstlisting}
+
+    Unifierクラスのunityメソッドを用いて得られた変数束縛から
+    GraphicShapeインスタンスを作成，パラメータを設定する．すべての
+    図形が初期状態から読み取れたら，Vector<GraphicShape>型のインスタンス
+    を返す．これをGUI用のDrawCanvasクラスのinitメソッド内で受け取り，
+    GUIで初期状態を表示するために使われる．\\ \\
+    GUI用のDrawCanvasクラスでは，Plannerクラスで作成した手順を
+    Vector<String>型で返すGUIStrartメソッド（グループレポート前課題を参照）
+    から受け取り記憶する．ここまでの動作がDrawCanvasクラスのinitメソッド，
+    つまり，GUIの初期化である．参考までに，以下にコードを示す．
+
+    \begin{lstlisting}[caption=DrawCanvas.java中のinitメソッド(一部抜粋)]
+        /**
+        * 初期状態の設定後，GraphicShapeの一覧を作成． 
+        * boardに格納しつつshapeMapに登録，
+        * さらに自身に座標を記憶させる．
+        * boardの初期化が終わったら，
+        * 目標状態から手順をPlannerで作成する．
+        * 
+        * @param initState 初期状態
+        * @param goalList  目標状態
+        */
+        public void init(Vector<String> initState, Vector<String> goalList) {
+            shapeMap = new HashMap<>();
+            Vector<GraphicShape> shapes = GraphicShape.parseState(initState, shapeMap);
+            boxNum = shapes.size();
+            if (boxNum == 0||goalList.isEmpty()) {
+                System.out.println("fail to load:(");
+            }
+            board = new GraphicShape[boxNum + 1][boxNum];
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[i].length; j++) {
+                    if (i == 0) {
+                        GraphicShape gs = shapes.get(j);
+                        gs.setPoint(i, j);
+                        board[i][j] = gs;
+                    } else
+                        board[i][j] = null;
+                }
+            }
+            holding = 0;
+            index = 0;
+            state = "board was initialized!";
+            repaint();
+            Planner plan = new Planner();
+            op = plan.GUIStart(goalList, initState);
+        }
+    \end{lstlisting}
+
+    初期化の際に，GUI用の座標にインスタンスの参照を登録し，その座標を
+    インスタンス自体にも記憶させている．\\ \\
+    次に，記憶した手順を実行するparseOperationメソッドを説明する．
+    GraphicShapeクラスのparseStateメソッドと同様，2つのStringを
+    Unifierクラスのunifyクラスで手順を解釈する．読み込まれた手順によって
+    pickUpメソッドかdropメソッドが呼び出される．手順に関係ない形や色の
+    情報は無視している．この二つのメソッドは以下のように動作する．
+    \begin{itemize}
+        \item[pickUpメソッド] 持ち上げる（座標の一番上に移動する）
+            図形を引き数とし，現在の座標から真上の位置に移動させる．
+        \item[dropメソッド] 移動させる物体と移動先の物体を引数とする．
+            移動先の物体としてnullが指定されたときはtable，つまり
+            なにも置かれていない場所に配置するようにした．移動先の物体から
+            座標を取得し，その座標の一つ真上に物体を移動させる．
+    \end{itemize}，
+    この二つのメソッドは，物体の移動後に再び，
+    GraphicShapeインスタンス自身に座標を記憶させる．
+    pickUpメソッドとdropメソッドは以下のようになった．
+    \begin{lstlisting}[caption=pickUpメソッド]
+        void pickUp(GraphicShape gs) {
+            int col = gs.getCol();
+            holding = col;
+            int row = gs.getRow();
+            board[board.length - 1][col] = gs;
+            gs.setPoint(board.length - 1, col);
+            board[row][col] = null;
+            repaint();
+        }
+    \end{lstlisting}
+    \begin{lstlisting}[caption=dropメソッド]
+        void drop(GraphicShape gs, GraphicShape on) {
+            int col = -1;
+            int row = 0;
+            if (on == null) {
+                col = searchTable();
+            } else {
+                col = on.getCol();
+                row = on.getRow() + 1;
+            }
+            board[gs.getRow()][gs.getCol()] = null;
+            board[row][col] = gs;
+            gs.setPoint(row, col);
+            holding = col;
+            repaint();
+        }
+    \end{lstlisting}
+    dropメソッドにおけるsearchTableメソッドは，
+    一番小さい何も配置されていない列座標を取得するものである．\\ \\
+    上記の二つを呼び出すparseOperationメソッドは，GUIのボタンから
+    呼び出され，手順を一つずつ実行する．
+    ここでは冗長になるため，描画用のメソッドの説明は省略させていただく．
+
+\subsection{実行例29114031-大原拓人}
+    この実行では，初期状態としてA(三角形，赤)，B(四角，青)，C(四角，緑)を
+    用い，目標状態として「triangle on B」，「B on green」を指定した．
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{031/GUI01.jpg}\\
+    \caption{手順の途中}
+    \includegraphics[scale=0.5]{031/GUI02.jpg}
+    \caption{目標状態}
+\end{figure}
+\subsection{考察29114031-大原拓人}
+    このコードはPlannerクラスで生成された手順が正確に作成されていることが
+    前提として構成されている．もしも，本来持ち上げられない物体を
+    持ち上げる手順や，連続で持ち上げようとすると，目標状態にならなくなってしまう．
+    逆に言えば，Plannerクラスが正しい手順を生成することを前提に
+    作成されたGUIは見通しの良いコードとなった．
+
+
+\section{感想29114007-池口弘尚}
+色や形をルールに組み込むのにかなり時間がかかってしまった．
+オペレータの数が増えたことによって，様々な問題が発生してしまい，それを解決するための方法を模索するのに時間を費やしてしまった．
+そのため，ほかに実装しておきたいことがあまり実装できていないため，work6でそのようなことをまとめて実装したい．
+
+\section{感想29114031-大原拓人}
+    今回初めてGUIを担当したが，当初手順を一つずつ実行する実装を，
+    Threadとwaitで処理を一時中断する形で実行しようとしていた．
+    しかし，それだと手順を一つずつ実行するボタンしか作れない
+    気がしたので，この後の改良のことを考えて，それらを使わない
+    実装を考えた．次回の課題では，前回できなかった自然言語処理に挑戦してみたい．
 
 % 参考文献
 \begin{thebibliography}{99}
-    \bibitem{pl} ウェブインテリジェンスの演習で用いられたコードの例を参考にした
-    \bibitem{is} 新谷虎松，講義「知識システム」スライド
+    \bibitem{swing} https://www.javadrive.jp/tutorial/
 \end{thebibliography}
 
 \end{document}

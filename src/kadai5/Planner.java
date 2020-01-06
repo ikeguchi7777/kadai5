@@ -223,10 +223,7 @@ public class Planner {
 						//System.out.println("Success !");
 						return true;
 					} else {
-						if (tmpPoint == 0)
-						cPoint++;
-						else
-						cPoint = tmpPoint + 1;
+						cPoint = tmpPoint;
 						//cPoint=tmpPoint;
 						//System.out.println("Fail::"+cPoint);
 						theGoalList.add(0, aGoal);

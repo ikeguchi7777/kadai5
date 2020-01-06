@@ -1,4 +1,4 @@
-//package kadai5;
+package kadai5;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -134,11 +134,6 @@ public class Unifier {
 		return str1.startsWith("?");
 	}
 	
-	boolean varAll(String str) {
-		// ?*なら具体化しない
-		return var(str)&&str.charAt(1)=='*';
-	}
-
 	boolean varAll(String str) {
 		// ?*なら具体化しない
 		return var(str)&&str.charAt(1)=='*';

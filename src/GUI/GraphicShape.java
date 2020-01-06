@@ -86,8 +86,11 @@ public class GraphicShape {
         return name;
     }
 
-    public void setColor(String color) {
+    public boolean setColor(String color) {
+        if (colorMap.get(color) == null)
+            return false;
         this.color = color;
+        return true;
     }
 
     public void setShape(String shape) {
@@ -120,10 +123,12 @@ public class GraphicShape {
                 GraphicShape gs = new GraphicShape(var.get("?name"));
                 shapes.add(gs);
                 shapeMap.put(var.get("?name"), gs);
-            } else if ((new Unifier()).unify("?name has a characteristic of ?color", string, var))
-                shapeMap.get(var.get("?name")).setColor(var.get("?color"));
-            else if ((new Unifier()).unify("?name has shape of ?shape", string, var))
-                shapeMap.get(var.get("?name")).setShape(var.get("?shape"));
+            } else if ((new Unifier()).unify("?name has a characteristic of ?chara", string, var)) {
+                GraphicShape gs = shapeMap.get(var.get("?name"));
+                if (gs.setColor(var.get("?chara")))
+                    continue;
+                gs.setShape(var.get("?chara"));
+            }
         }
         return shapes;
     }

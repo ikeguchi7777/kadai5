@@ -61,11 +61,11 @@ public class DrawCanvas extends JPanel {
      * 
      * @return initial states
      */
-    public Vector<String> initState() {
+    public static Vector<String> initState() {
         Vector<String> initialState = new Vector<String>();
         initialState.addAll(Shape.make("A", "red", "triangle"));
-        initialState.addAll(Shape.make("B", "blue"));
-        initialState.addAll(Shape.make("C", "green"));
+        initialState.addAll(Shape.make("B", "blue","rect"));
+        initialState.addAll(Shape.make("C", "green","rect"));
         initialState.addElement("handEmpty");
         return initialState;
     }
@@ -75,7 +75,7 @@ public class DrawCanvas extends JPanel {
      * 
      * @return goal states
      */
-    public Vector<String> goalList() {
+    public static Vector<String> goalList() {
         Vector<String> goalList = new Vector<String>();
         goalList.addElement("triangle on B");
         goalList.addElement("B on green");

@@ -1,4 +1,4 @@
-//package kadai5;
+package kadai5;
 
 import java.util.Vector;
 
